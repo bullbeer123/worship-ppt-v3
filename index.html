@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="elder-mode">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>主日礼拜PPT生成器</title>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<style>
+/* ============ RESET & VARIABLES ============ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+    --hero-bg:linear-gradient(135deg,#0c0718 0%,#1a0d35 50%,#2d1b69 100%);
+    --card-bg:#ffffff;
+    --bg:#f5f3ff;
+    --primary:#7c3aed;--primary-hover:#6d28d9;--primary-light:#ede9fe;
+    --accent:#a78bfa;--accent-light:#ddd6fe;
+    --text:#1f2937;--text-secondary:#6b7280;--text-light:#9ca3af;
+    --success:#10b981;--success-bg:#d1fae5;
+    --warning:#f59e0b;--warning-bg:#fef3c7;
+    --error:#ef4444;--error-bg:#fee2e2;
+    --border:#e5e7eb;--border-light:#f3f4f6;
+    --radius-sm:8px;--radius:14px;--radius-lg:20px;--radius-xl:28px;
+    --shadow:0 4px 24px rgba(0,0,0,0.08);--shadow-lg:0 8px 40px rgba(0,0,0,0.12);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100dvh;-webkit-font-smoothing:antialiased}
+
+/* ============ HERO ============ */
+.hero{background:var(--hero-bg);text-align:center;padding:60px 20px 50px;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 30%,rgba(124,58,237,0.15) 0%,transparent 50%),radial-gradient(circle at 70% 70%,rgba(99,102,241,0.1) 0%,transparent 50%);pointer-events:none}
+.hero-content{position:relative;z-index:1;max-width:720px;margin:0 auto}
+.hero h1{font-size:clamp(28px,6vw,48px);font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:12px;line-height:1.2}
+.hero h1 span{background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(15px,2.5vw,18px);color:rgba(255,255,255,0.7);margin-bottom:28px;line-height:1.6}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-cta{display:inline-flex;align-items:center;gap:6px;padding:14px 32px;border-radius:50px;font-size:16px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;text-decoration:none}
+.btn-cta-primary{background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.4)}
+.btn-cta-primary:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(124,58,237,0.5)}
+.btn-cta-secondary{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(10px)}
+.btn-cta-secondary:hover{background:rgba(255,255,255,0.15)}
+
+/* ============ LAYOUT ============ */
+.app{max-width:720px;margin:-30px auto 40px;padding:0 16px;position:relative;z-index:2}
+.card{background:var(--card-bg);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:28px;margin-bottom:20px;border:1px solid var(--border-light);transition:box-shadow 0.3s}
+.card:hover{box-shadow:var(--shadow-lg)}
+.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.card-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card-title .icon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px}
+.card-title .icon-purple{background:var(--primary-light);color:var(--primary)}
+.card-title .icon-green{background:var(--success-bg);color:var(--success)}
+.card-title .icon-amber{background:var(--warning-bg);color:var(--warning)}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+.badge-purple{background:var(--primary-light);color:var(--primary)}
+.badge-green{background:var(--success-bg);color:var(--success)}
+
+/* ============ TEXTAREA ============ */
+.paste-area{width:100%;min-height:220px;padding:18px;border:2px dashed var(--border);border-radius:var(--radius);font-size:15px;line-height:1.8;resize:vertical;outline:none;font-family:inherit;color:var(--text);background:var(--bg);transition:all 0.2s}
+.paste-area:focus{border-color:var(--primary);border-style:solid;box-shadow:0 0 0 3px rgba(124,58,237,0.1)}
+.paste-area::placeholder{color:var(--text-light)}
+
+/* ============ BUTTONS ============ */
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;min-height:48px;font-family:inherit}
+.btn:active{transform:scale(0.97)}
+.btn:disabled{opacity:0.4;pointer-events:none}
+.btn-primary{background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;box-shadow:0 2px 8px rgba(124,58,237,0.25)}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(124,58,237,0.35);transform:translateY(-1px)}
+.btn-amber{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;box-shadow:0 2px 8px rgba(245,158,11,0.25)}
+.btn-amber:hover{box-shadow:0 4px 16px rgba(245,158,11,0.35);transform:translateY(-1px)}
+.btn-outline{background:transparent;border:2px solid var(--border);color:var(--text-secondary)}
+.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+.btn-ghost{background:transparent;color:var(--text-light);padding:10px 14px;font-size:14px;font-weight:500}
+.btn-ghost:hover{color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:var(--radius-sm);min-height:auto;font-weight:500}
+.btn-play{border:1px solid var(--success);color:var(--success);background:transparent}
+.btn-play:hover{background:var(--success);color:#fff}
+
+/* ============ FIELD CARDS ============ */
+.field-card{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-light);gap:14px}
+.field-card:last-of-type{border-bottom:none}
+.field-label{font-size:14px;font-weight:600;color:var(--text-secondary);min-width:64px;flex-shrink:0;padding-top:8px}
+.field-value{text-align:right;flex:1;min-width:0}
+.field-value input,.field-value textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-size:14px;outline:none;text-align:right;font-family:inherit;transition:border-color 0.2s}
+.field-value input:focus,.field-value textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(124,58,237,0.08)}
+.field-value textarea{min-height:60px;resize:vertical;text-align:left}
+.field-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px}
+
+/* ============ HINT & TOGGLE ============ */
+.hint{font-size:13px;color:var(--text-light);text-align:center;padding:4px 0;margin-top:8px}
+.auto-toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none;margin-top:8px}
+.auto-toggle input{width:16px;height:16px;accent-color:var(--primary);cursor:pointer}
+
+/* ============ TOAST ============ */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:500;background:#1f2937;color:#fff;opacity:0;pointer-events:none;transition:opacity 0.3s;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
+.toast.show{opacity:1}
+.toast.error{background:var(--error);color:#fff}
+
+/* ============ LOADING OVERLAY ============ */
+.loading-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(12,7,24,0.85);z-index:300;justify-content:center;align-items:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
+.loading-overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:16px;color:rgba(255,255,255,0.8);font-weight:500}
+
+/* ============ SLIDESHOW OVERLAY ============ */
+.slide-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0c0718;z-index:280;flex-direction:column}
+.slide-overlay.show{display:flex}
+.slide-stage{flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:16px}
+.slide-page{width:min(100vw,calc(100dvh*16/9));height:min(100dvh,calc(100vw*9/16));background:#5B1A6E;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:3% 5%;overflow:hidden;border-radius:4px;--fs-scale:1;--lh:1.6}
+.slide-page .s-title{font-size:calc(clamp(24px,5vw,96px)*var(--fs-scale));color:#fff;font-weight:700;text-align:center;line-height:var(--lh)}
+.slide-page .s-subtitle{font-size:calc(clamp(18px,3.5vw,72px)*var(--fs-scale));color:#F5D76E;text-align:center;margin-top:6px;line-height:var(--lh)}
+.slide-page .s-body{font-size:calc(clamp(18px,4vw,80px)*var(--fs-scale));color:#fff;text-align:center;line-height:var(--lh);margin-top:14px;max-width:95%;word-break:break-word}
+.slide-page .s-cover-label{font-size:calc(clamp(16px,3vw,56px)*var(--fs-scale));color:#F5D76E;text-align:center;margin-top:-10px}
+.slide-controls{display:flex;justify-content:center;align-items:center;gap:8px;padding:10px 16px;background:rgba(26,16,48,0.95);border-top:1px solid rgba(255,255,255,0.08)}
+.slide-ctrl-btn{padding:10px 14px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.6);font-size:14px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.slide-ctrl-btn:hover{border-color:rgba(255,255,255,0.3);color:#fff}
+.slide-counter{font-size:14px;color:rgba(255,255,255,0.5);min-width:48px;text-align:center}
+
+/* ============ LEFT TOC PANEL ============ */
+.slide-toc-panel{position:fixed;left:0;top:0;width:180px;height:100dvh;background:rgba(15,7,32,0.97);border-right:1px solid rgba(255,255,255,0.08);z-index:290;transform:translateX(-100%);transition:transform 0.25s ease;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:3px}
+.slide-toc-panel.show{transform:translateX(0)}
+.slide-toc-item{display:flex;align-items:center;gap:6px;border-radius:6px;background:rgba(255,255,255,0.04);border:none;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.5);transition:all 0.15s;padding:8px 10px;text-align:left;width:100%;font-family:inherit}
+.slide-toc-item:hover{background:rgba(255,255,255,0.1);color:#fff}
+.slide-toc-item.current{background:var(--primary);color:#fff}
+.slide-toc-item.section-start{border-left:3px solid #f59e0b;padding-left:7px}
+.slide-toc-item .toc-num{font-size:10px;opacity:0.6;min-width:20px;text-align:center;flex-shrink:0}
+.slide-toc-item .toc-label{font-size:11px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slide-toc-item.current .toc-num{opacity:1}
+.slide-audio-bar{display:none;justify-content:space-between;align-items:center;padding:8px 16px;background:rgba(26,16,48,0.95);border-top:1px solid rgba(255,255,255,0.08);gap:8px}
+.slide-audio-bar.show{display:flex}
+.audio-name{font-size:13px;color:rgba(255,255,255,0.5);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.audio-time{font-size:11px;color:rgba(255,255,255,0.4);min-width:80px;text-align:center}
+
+/* ============ VERIFY DASHBOARD ============ */
+.verify-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px}
+.verify-item .v-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
+.verify-item .v-detail{font-size:13px;color:var(--text-secondary);line-height:1.5}
+
+/* ============ HISTORY ============ */
+.history-box{border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;background:var(--bg);margin-top:8px}
+.history-box summary{font-size:14px;font-weight:600;cursor:pointer;color:var(--text-secondary);list-style:none;padding:2px 0;outline:none}
+.history-box summary::-webkit-details-marker{display:none}
+.history-box summary::before{content:'▸';margin-right:6px;font-size:11px;color:var(--text-light)}
+.history-box[open] summary::before{content:'▾'}
+.hist-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,0.03);border:1px solid var(--border-light);border-radius:var(--radius-sm);margin-top:6px}
+.hist-title{flex:1;min-width:0;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-time{font-size:11px;color:var(--text-light);flex-shrink:0}
+.hist-restore{font-size:12px;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--primary);background:transparent;color:var(--primary);cursor:pointer;flex-shrink:0;transition:all 0.15s}
+.hist-restore:hover{background:var(--primary);color:#fff}
+.hist-empty{font-size:13px;color:var(--text-light);padding:8px 0;text-align:center}
+
+/* ============ FEATURES GRID ============ */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.feature-item{text-align:center;padding:20px 12px;background:var(--card-bg);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border-light)}
+.feature-item .f-icon{font-size:28px;margin-bottom:8px}
+.feature-item .f-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.feature-item .f-desc{font-size:12px;color:var(--text-secondary)}
+@media(max-width:600px){.features{grid-template-columns:1fr}}
+
+/* ============ STEPS ============ */
+.steps{display:flex;gap:16px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.step{flex:1;min-width:120px;text-align:center;padding:20px 16px;background:var(--card-bg);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border-light)}
+.step-num{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:8px}
+.step h4{font-size:14px;color:var(--text);margin-bottom:4px}
+.step p{font-size:12px;color:var(--text-secondary);line-height:1.4}
+
+/* ============ SIDEBAR (desktop) ============ */
+.side-panel{position:fixed;right:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:50}
+@media(max-width:768px){.side-panel{display:none}}
+.side-btn{padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card-bg);color:var(--text-secondary);font-size:12px;cursor:pointer;text-align:center;transition:all 0.15s;min-width:52px;box-shadow:var(--shadow)}
+.side-btn:hover{border-color:var(--primary);color:var(--primary)}
+.side-label{font-size:13px;font-weight:600;display:block}
+.side-hint{font-size:10px;color:var(--text-light);display:block;margin-top:1px}
+
+/* ============ ELDER MODE ============ */
+.eldermode-toggle{font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;user-select:none;text-decoration:underline;text-underline-offset:3px;transition:color 0.2s}
+.eldermode-toggle:hover{color:rgba(255,255,255,0.8)}
+html.elder-mode body{font-size:18px;line-height:1.8}
+html.elder-mode .app{max-width:760px}
+html.elder-mode .hero h1{font-size:clamp(32px,6vw,52px)}
+html.elder-mode .hero p{font-size:clamp(16px,2.5vw,19px)}
+html.elder-mode .card{padding:32px}
+html.elder-mode .card-title{font-size:20px}
+html.elder-mode .paste-area{min-height:280px;font-size:17px;padding:22px;line-height:2}
+html.elder-mode .btn{min-height:56px;font-size:17px;padding:14px 24px;border-radius:50px}
+html.elder-mode .btn-sm{min-height:auto;font-size:13px;padding:8px 14px;border-radius:20px}
+html.elder-mode .field-label{font-size:16px;min-width:72px}
+html.elder-mode .field-value input,html.elder-mode .field-value textarea{font-size:16px;padding:12px 16px}
+html.elder-mode .hint{font-size:15px}
+html.elder-mode .auto-toggle{font-size:15px}
+html.elder-mode .toast{font-size:16px;padding:14px 28px}
+html.elder-mode .slide-toc-panel{width:200px}
+html.elder-mode .slide-toc-item{padding:10px 8px;font-size:14px}
+html.elder-mode .history-box summary{font-size:16px}
+html.elder-mode .hist-title{font-size:14px}
+
+/* ============ FOOTER ============ */
+.footer{text-align:center;padding:40px 20px;color:var(--text-light);font-size:13px}
+.footer a{color:var(--primary);text-decoration:none}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:640px){
+    .card{padding:20px;border-radius:var(--radius)}
+    .hero{padding:40px 16px 36px}
+    .app{margin-top:-20px;padding:0 8px}
+    .btn-grid{grid-template-columns:1fr}
+    .steps{flex-direction:column}
+    .slide-toc-panel{width:150px}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>主日礼拜 <span>PPT生成器</span></h1>
+        <p>粘贴礼拜内容，AI 自动匹配诗歌、经文与音频，秒级生成专业投屏幻灯片</p>
+        <div class="hero-cta">
+            <button class="btn-cta btn-cta-primary" onclick="document.getElementById('input-card').scrollIntoView({behavior:'smooth'});document.getElementById('paste-area').focus()">✝️ 开始制作</button>
+            <button class="btn-cta btn-cta-secondary" onclick="document.getElementById('features-section').scrollIntoView({behavior:'smooth'})">了解更多</button>
+        </div>
+    </div>
+</section>
+
+<div class="app">
+
+<!-- FEATURES -->
+<section id="features-section">
+    <div class="features">
+        <div class="feature-item"><div class="f-icon">📖</div><div class="f-title">智能解析</div><div class="f-desc">粘贴通告文字，自动提取诗歌、经文、讲道信息</div></div>
+        <div class="feature-item"><div class="f-icon">🎵</div><div class="f-title">自动配乐</div><div class="f-desc">5万+赞美诗歌词与音频库，智能匹配</div></div>
+        <div class="feature-item"><div class="f-icon">✨</div><div class="f-title">一键生成</div><div class="f-desc">核对确认后直接下载 PPT，投屏即用</div></div>
+    </div>
+</section>
+
+<!-- STEPS -->
+<section>
+    <div class="steps">
+        <div class="step"><div class="step-num">1</div><h4>粘贴内容</h4><p>把手机备忘录中的礼拜内容粘贴到下方</p></div>
+        <div class="step"><div class="step-num">2</div><h4>确认匹配</h4><p>AI 自动匹配诗歌歌词与经文，逐项核对</p></div>
+        <div class="step"><div class="step-num">3</div><h4>下载投屏</h4><p>一键生成 PPT 文件，下载后即可投屏播放</p></div>
+    </div>
+</section>
+
+<!-- INPUT CARD -->
+<div class="card" id="input-card">
+    <div class="card-header">
+        <span class="card-title"><span class="icon icon-purple">📋</span>礼拜内容</span>
+        <span class="badge badge-purple" id="ai-badge">AI 就绪</span>
+        <span class="eldermode-toggle" id="eldermode-link" onclick="toggleElderMode()">👴 老年版</span>
+    </div>
+    <textarea class="paste-area" id="paste-area" placeholder="把手机备忘录里的文字直接粘贴到这里...
+
+格式示例：
+Sundayworship 2026.6.7
+上周：回顾...
+赛66：12-24 赐给存留者的应许
+赞美：91 二十四小时呼吁
+诗篇：23篇
+新编赞美：54 心向主宝座歌
+论坛：..." oninput="onPasteInput()"></textarea>
+    <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(this)">
+    <div class="btn-grid">
+        <button class="btn btn-amber" onclick="oneClickGenerate()">✨ 帮我做</button>
+        <button class="btn btn-outline" onclick="matchAllManual()">🔍 解析内容</button>
+    </div>
+    <div class="btn-grid">
+        <button class="btn btn-ghost" onclick="openPhotoCapture()">📷 拍照识别</button>
+        <button class="btn btn-ghost" onclick="restoreLastRecord()">📂 恢复记录</button>
+    </div>
+    <div class="hint" id="parse-hint">按「帮我做」自动完成解析、搜索歌词音频、生成幻灯片</div>
+    <label class="auto-toggle"><input type="checkbox" id="auto-parse-toggle" checked onchange="toggleAutoParse()"> 粘贴后自动解析</label>
+    <details class="history-box" id="history-box">
+        <summary>📚 历史记录（最近 5 次）</summary>
+        <div id="history-list"></div>
+    </details>
+</div>
+
+<!-- EDIT CARD -->
+<div class="card" id="edit-card" style="display:none">
+    <div class="card-header">
+        <span class="card-title"><span class="icon icon-green">✅</span>确认 / 修改</span>
+        <span class="badge badge-green" id="field-count">0 项</span>
+    </div>
+    <div id="edit-fields"></div>
+    <div class="btn-grid" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="buildSlideshow()">🎬 生成幻灯片</button>
+        <button class="btn btn-outline" onclick="document.getElementById('edit-card').style.display='none';document.getElementById('input-card').scrollIntoView({behavior:'smooth'})">← 返回修改</button>
+    </div>
+    <div style="margin-top:10px;text-align:right">
+        <button class="btn btn-sm btn-outline" onclick="downloadAllAudio()" id="btn-dl-all" style="display:none">⬇ 下载全部音频</button>
+    </div>
+</div>
+
+<!-- VERIFY CARD -->
+<div class="card" id="verify-card" style="display:none">
+    <div class="card-header">
+        <span class="card-title"><span class="icon icon-amber">🔍</span>自动识别验证</span>
+        <span class="badge" style="background:var(--warning-bg);color:var(--warning)" id="verify-summary">请逐项确认</span>
+    </div>
+    <div class="hint" style="margin-bottom:12px">以下内容由 AI 自动匹配，请逐项核对后点击确认生成</div>
+    <div id="verify-list"></div>
+    <div class="btn-grid" style="margin-top:14px">
+        <button class="btn btn-outline" onclick="closeVerify()">← 返回修改</button>
+        <button class="btn btn-amber" onclick="confirmVerify()">✅ 确认无误，生成幻灯片 →</button>
+    </div>
+</div>
+
+</div>
+
+<footer class="footer">
+    <p>✝️ 主日礼拜PPT生成器 · 服侍教会</p>
+</footer>
+
+<!-- SLIDESHOW OVERLAY -->
+<div class="slide-overlay" id="slideshow-overlay">
+    <div class="slide-stage"><div class="slide-page" id="slide-page"></div></div>
+    <div class="slide-toc-panel" id="slide-toc-panel"><div id="slide-toc-list" style="display:flex;flex-direction:column;gap:3px;width:100%"></div></div>
+    <div class="slide-audio-bar" id="slide-audio-bar">
+        <span class="audio-name" id="audio-name-display"></span>
+        <span class="audio-time" id="audio-time-display">00:00</span>
+        <button class="slide-ctrl-btn" onclick="togglePlay()" id="btn-play">▶ 播放</button>
+    </div>
+    <div class="slide-controls">
+        <button class="slide-ctrl-btn" onclick="toggleToc()">📋 目录</button>
+        <button class="slide-ctrl-btn" onclick="prevSlide()">◀</button>
+        <span class="slide-counter" id="slide-counter">0 / 0</span>
+        <button class="slide-ctrl-btn" onclick="nextSlide()">▶</button>
+        <button class="slide-ctrl-btn" id="btn-fullscreen" onclick="toggleFullscreen()">⛶ 全屏</button>
+        <button class="slide-ctrl-btn" onclick="closeSlideshow(true)">✕ 关闭</button>
+    </div>
+</div>
+
+<!-- Hidden file inputs for audio -->
+<input type="file" id="audio-praise1" accept="audio/*" style="display:none" onchange="onAudioSelected('praise1',this)">
+<input type="file" id="audio-praise2" accept="audio/*" style="display:none" onchange="onAudioSelected('praise2',this)">
+<input type="file" id="audio-special" accept="audio/*" style="display:none" onchange="onAudioSelected('special',this)">
+<input type="file" id="audio-hymn1" accept="audio/*" style="display:none" onchange="onAudioSelected('hymn1',this)">
+<input type="file" id="audio-hymn2" accept="audio/*" style="display:none" onchange="onAudioSelected('hymn2',this)">
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loading-text">处理中...</div>
+</div>
+
+<!-- SIDEBAR (desktop) -->
+<div class="side-panel" id="side-panel">
+    <button class="side-btn" onclick="matchAllManual()"><span class="side-label">🔍 一键匹配</span><span class="side-hint">解析+搜索</span></button>
+    <button class="side-btn" onclick="resetAll()"><span class="side-label">🔄 重置</span></button>
+    <button class="side-btn" onclick="toggleFullscreen()"><span class="side-label">⛶ 全屏</span></button>
+</div>
+
+<script>
+// ============ CONSTANTS ============
+const SGB_LIST_URL = 'https://api.top237.top/ry-api/start/zanmei/sgbList';
+const SEARCH_AUDIO_URL = 'https://api.top237.top/ry-api/start/zanmei/searchByIdsLazyField';
+const AUDIO_OSS_BASE = 'https://oss.top237.top/assets/';
+const BIBLE_API = 'https://api.top237.top/ry-api/no-auth/bible/search';
+const RECORD_KEY = 'wpg_last_record';
+const SONG_URL_DICT_KEY = 'wpg_song_url_dict';
+const HISTORY_KEY = 'wpg_history';
+const HISTORY_FIELDS = ['f-lastweek','f-date','f-praise1','f-praise2','f-praise1-lyrics','f-praise2-lyrics','f-special','f-special-lyrics','f-psalm','f-psalm-content','f-hymn1','f-hymn2','f-hymn1-lyrics','f-hymn2-lyrics','f-sermon1','f-sermon2','f-forum','f-declaration'];
+const LYRIC_GROUPS = {'f-praise1-lyrics':'praise1-lyrics-group','f-praise2-lyrics':'praise2-lyrics-group','f-special-lyrics':'special-lyrics-group','f-hymn1-lyrics':'hymn1-lyrics-group','f-hymn2-lyrics':'hymn2-lyrics-group'};
+
+const FIXED = {
+    standVerse:'约4:24', standVerseText:'神是个灵．所以拜他的、必须用心灵和诚实拜他。',
+    standVerseMeditation:'安静你的心，用心灵和诚实来敬拜',
+    creed:['我信上帝，全能的父，创造天地的主。','我信我主耶稣基督，上帝的独生子；','因圣灵感孕，由童贞女马利亚所生；','在本丢彼拉多手下受难，被钉于十字架，受死，埋葬；','降在阴间；第三天从死人中复活；','升天，坐在全能父上帝的右边；','将来必从那里降临，审判活人，死人。','我信圣灵；我信圣而公之教会；我信圣徒相通；','我信罪得赦免，我信身体复活；我信永生。阿们。'],
+    welcome:'24', welcomeName:'你原来是宝贵的',
+    welcomeLyrics:['你原来是宝贵的\n神将你放在我的身边\n你是我最爱的宝贝\n神将你放在我的身边','我要一生爱你\n我要一生跟随你\n因你是我生命\n你是我最爱的宝贝'],
+    finalHymn:'134', finalHymnName:'主啊，在我人生中',
+    finalHymnLyrics:['主啊，在我人生中\n你是我的力量','我愿一生献上\n为你而活','主啊，在我人生中\n你是我的盼望','我愿跟随你\n直到永远']
+};
+
+const DEFAULT_COVER_BG_DATA = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#5B1A6E"/><stop offset="100%" style="stop-color:#2d1b69"/></linearGradient></defs><rect width="1280" height="720" fill="url(#g)"/><text x="640" y="360" text-anchor="middle" fill="rgba(255,255,255,0.08)" font-size="120" font-family="serif">✝</text></svg>');
+
+// ============ GLOBALS ============
+let slides=[], currentSlide=0, tocVisible=false, coverImgUrl=null, endingImgUrl=null;
+let audioFiles={}, customSlides=[], nextElId=1, songCache=null;
+let currentAudio=null, audioElement=null;
+let _autoParseTimer=null, _lastAutoParsedRaw='', _autoParseEnabled=true;
+let savedFontScale=null;
+
+// ============ HELPERS ============
+const $=id=>document.getElementById(id);
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function showToast(msg,isError){const t=$('toast');t.textContent=msg;t.className='toast'+(isError?' error':'');setTimeout(()=>t.classList.add('show'),10);setTimeout(()=>t.classList.remove('show'),3000)}
+function showPhotoLoading(show,msg){const l=$('loading');if(show){$('loading-text').textContent=msg||'处理中...';l.classList.add('show')}else l.classList.remove('show')}
+function ensureHttps(u){return u?u.replace(/^http:/,'https:'):u}
+function getSectionAbbr(name){const m={'\u5f00\u7bc7':'\u5f00','\u732e\u4e0a\u8d5e\u7f8e':'\u8d5e','\u8bd7\u7bc7':'\u8bd7','\u65b0\u7f16\u8d5e\u7f8e1':'\u7f161','\u65b0\u7f16\u8d5e\u7f8e2':'\u7f162','\u4fe1\u4ef0\u544a\u767d':'\u4fe1','\u7279\u9882':'\u7279','\u6b22\u8fce\u8d5e\u7f8e':'\u8fce','\u7ed3\u675f\u8d5e\u7f8e':'\u7ed3','\u795d\u798f\u7977\u544a':'\u7977','\u8bba\u575b\u5206\u4eab':'\u8bba','\u4ee5\u9a6c\u5185\u5229':'\u7ed3'};return m[name]||name.slice(0,2)}
+function getSectionAbbr(name) {
+    const map = {
+        '开篇': '开', '献上赞美': '赞', '诗篇': '诗', '新编赞美1': '编1', '新编赞美2': '编2',
+        '信仰告白': '信', '特颂': '特', '欢迎赞美': '迎', '结束赞美': '结',
+        '祝福祷告': '祷', '论坛分享': '论', '以马内利': '结'
+    };
+    return map[name] || name.slice(0,2);
+}
+
+// Render edit fields dynamically
+function renderEditFields() {
+    const fields = [
+        {id:'f-date',label:'日期',type:'text',placeholder:'2026.6.7'},
+        {id:'f-lastweek',label:'上周',type:'textarea',placeholder:'上周的默想或回顾内容...',rows:2},
+        {id:'f-praise1',label:'赞美 1',type:'text',placeholder:'91 二十四小时呼吁'},
+        {id:'f-praise2',label:'赞美 2',type:'text',placeholder:'118 Remnant'},
+        {id:'f-special',label:'特颂',type:'text',placeholder:'没有则留空'},
+        {id:'f-psalm',label:'诗篇',type:'text',placeholder:'23',style:'width:80px'},
+        {id:'f-hymn1',label:'新编 1',type:'text',placeholder:'54 心向主宝座歌'},
+        {id:'f-hymn2',label:'新编 2',type:'text',placeholder:'258 耶稣领我歌'},
+        {id:'f-sermon1',label:'证道 1',type:'textarea',placeholder:'赛66：12-24 赐给存留者的应许',rows:2},
+        {id:'f-sermon2',label:'证道 2',type:'textarea',placeholder:'创3：15 永远的黑暗经济',rows:2},
+        {id:'f-forum',label:'论坛要点',type:'textarea',placeholder:'论坛分享的主题...',rows:3},
+        {id:'f-declaration',label:'祷告',type:'textarea',placeholder:'777的祷告...',rows:3},
+    ];
+    let html = '';
+    fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        const val = el ? el.value : '';
+        if (f.type === 'textarea') {
+            html += '<div class="field-card"><span class="field-label">'+f.label+'</span><div class="field-value"><textarea id="'+f.id+'" placeholder="'+f.placeholder+'" rows="'+f.rows+'">'+esc(val)+'</textarea></div></div>';
+        } else {
+            html += '<div class="field-card"><span class="field-label">'+f.label+'</span><div class="field-value"><input type="text" id="'+f.id+'" placeholder="'+f.placeholder+'" value="'+esc(val)+'"'+(f.style?' style="'+f.style+'"':'')+'></div></div>';
+        }
+    });
+    $('edit-fields').innerHTML = html;
+}
+
+// ============ TEXT PARSING ============
+async function parseText() {
+    const raw = $('paste-area').value.trim();
+    if (!raw) throw new Error('请先粘贴礼拜内容');
+    
+    // Populate hidden fields first, then render
+    // (simplified parser - extracts date, praises, psalms, hymns, sermons)
+    const lines = raw.split('\n');
+    const data = {date:'',lastweek:'',praise1:'',praise2:'',special:'',psalm:'',hymn1:'',hymn2:'',sermon1:'',sermon2:'',forum:'',declaration:''};
+    
+    for (let i=0;i<lines.length;i++) {
+        let line = lines[i].trim();
+        if (!line) continue;
+        
+        // Date
+        if (/Sundayworship/i.test(line) || /礼拜|worship/i.test(line)) {
+            const m = line.match(/(\d{4}[.\-/]\d{1,2}[.\-/]\d{1,2})/);
+            if (m) data.date = m[1];
+            continue;
+        }
+        // Last week
+        if (/上周/i.test(line)) {
+            data.lastweek = line.replace(/上周[：:]?\s*/,'').trim() || lines[i+1]?.trim()||'';
+            continue;
+        }
+        // Praise
+        if (/赞美[：:]?\s*(\d+)/i.test(line) && !/新编/i.test(line)) {
+            const m = line.match(/赞美[：:]?\s*(\d+)/i);
+            const num = m[1];
+            if (!data.praise1) { data.praise1 = parsePraiseTitle(line, num); }
+            else if (!data.praise2) { data.praise2 = parsePraiseTitle(line, num); }
+            else data.special = parsePraiseTitle(line, num);
+            continue;
+        }
+        // Special
+        if (/特颂|特别赞美/i.test(line)) {
+            data.special = line.replace(/特颂[：:]?|特别赞美[：:]?\s*/gi,'').trim();
+            continue;
+        }
+        // Psalm
+        if (/诗篇|诵读经文/i.test(line)) {
+            const m = line.match(/(\d+)\s*篇/);
+            if (m) data.psalm = m[1];
+            else data.psalm = line.replace(/诗篇[：:]?|诵读经文[：:]?\s*/gi,'').trim();
+            continue;
+        }
+        // New hymn
+        if (/新编\s*赞美?[：:]?\s*(\d+)/i.test(line)) {
+            const m = line.match(/新编\s*赞美?[：:]?\s*(\d+)/i);
+            const num = m[1];
+            if (!data.hymn1) data.hymn1 = parsePraiseTitle(line, num);
+            else data.hymn2 = parsePraiseTitle(line, num);
+            continue;
+        }
+        // Sermon
+        if (/赛|创|出|利|民|申|书|士|得|撒|王|代|拉|尼|斯|伯|诗|箴|传|歌|耶|哀|结|但|何|珥|摩|俄|拿|弥|鸿|哈|番|该|亚|玛|太|可|路|约|徒|罗|林|加|弗|腓|西|帖|提|多|门|来|雅|彼|约|犹|启/.test(line) && /\d+[：:]\d+/.test(line)) {
+            if (!data.sermon1) data.sermon1 = line;
+            else if (!data.sermon2) data.sermon2 = line;
+            continue;
+        }
+        // Forum
+        if (/论坛|分享/i.test(line)) {
+            data.forum = line.replace(/论坛[：:]?|分享[：:]?\s*/gi,'').trim() || lines[i+1]?.trim()||'';
+            continue;
+        }
+        // Declaration / prayer
+        if (/777|宣告|祷告/i.test(line)) {
+            data.declaration = line.replace(/777[：:]?|宣告[：:]?|祷告[：:]?\s*/gi,'').trim() || lines[i+1]?.trim()||'';
+            continue;
+        }
+    }
+    
+    // Populate hidden form fields
+    for (const [k,v] of Object.entries(data)) {
+        const el = $('f-'+k);
+        if (el) el.value = v||'';
+    }
+    
+    // Show edit card
+    $('edit-card').style.display = 'block';
+    renderEditFields();
+    $('field-count').textContent = Object.values(data).filter(v=>v).length + ' 项';
+    $('edit-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function parsePraiseTitle(line, num) {
+    const rest = line.replace(new RegExp('.*?'+num+'\\s*'),'').trim();
+    return num + (rest ? ' ' + rest : '');
+}
+
+// ============ DATA COLLECTION ============
+function collectSlideData() {
+    return {
+        date: $('f-date').value.trim(),
+        lastweek: $('f-lastweek').value.trim(),
+        praise1: $('f-praise1').value.trim(),
+        praise2: $('f-praise2').value.trim(),
+        praise1Lyrics: $('f-praise1-lyrics')?.value.trim()||'',
+        praise2Lyrics: $('f-praise2-lyrics')?.value.trim()||'',
+        special: $('f-special').value.trim(),
+        specialLyrics: $('f-special-lyrics')?.value.trim()||'',
+        psalm: $('f-psalm').value.trim(),
+        psalmContent: $('f-psalm-content')?.value.trim()||'',
+        hymn1: $('f-hymn1').value.trim(),
+        hymn2: $('f-hymn2').value.trim(),
+        hymn1Lyrics: $('f-hymn1-lyrics')?.value.trim()||'',
+        hymn2Lyrics: $('f-hymn2-lyrics')?.value.trim()||'',
+        sermon1: $('f-sermon1').value.trim(),
+        sermon2: $('f-sermon2').value.trim(),
+        forum: $('f-forum').value.trim(),
+        declaration: $('f-declaration').value.trim(),
+    };
+}
+
+// ============ SONG / LYRICS / AUDIO SEARCH ============
+async function fetchLyricsSilent(type) {
+    try {
+        const val = $('f-'+type).value.trim();
+        if (!val) return null;
+        const match = val.match(/^(\d+)/);
+        const xuhao = match ? parseInt(match[1]) : null;
+        if (!xuhao) return null;
+        
+        let collIndex = -1;
+        const nameLower = val.toLowerCase();
+        if (nameLower.includes('新编')) collIndex = 2;
+        else if (nameLower.includes('赞美耶稣') || nameLower.includes('赞耶稣')) collIndex = 0;
+        else collIndex = 0;
+        
+        const resp = await fetch(SGB_LIST_URL);
+        const json = await resp.json();
+        if (json.code !== 0 || !json.data) return {error:'歌曲列表获取失败'};
+        
+        let song = null;
+        if (collIndex >= 0) {
+            const coll = json.data[collIndex];
+            if (coll && coll.songs) song = coll.songs.find(s => s.xuhao == xuhao);
+        }
+        if (!song) {
+            for (const col of json.data) {
+                if (!col || !col.songs) continue;
+                const found = col.songs.find(s => s.xuhao == xuhao);
+                if (found) { song = found; break; }
+            }
+        }
+        if (!song) return {error:'未找到歌曲 #'+xuhao};
+        
+        // Populate lyrics
+        if (song.lyrics) {
+            let lyricsEl = $('f-'+type+'-lyrics');
+            if (!lyricsEl) {
+                const div = document.createElement('textarea');
+                div.id = 'f-'+type+'-lyrics';
+                div.style.display = 'none';
+                $('edit-fields').appendChild(div);
+                lyricsEl = div;
+            }
+            lyricsEl.value = song.lyrics;
+        }
+        return {success:song.title||('#'+xuhao)};
+    } catch(e) { return {error:e.message}; }
+}
+
+async function fetchPsalmSilent() {
+    try {
+        const num = $('f-psalm').value.trim().replace(/篇/g,'');
+        if (!num||!/^\d+$/.test(num)) return null;
+        const resp = await fetch(BIBLE_API+'?query='+encodeURIComponent('诗'+num));
+        const json = await resp.json();
+        if (json.code!==200||!json.data||!json.data[0]?.bibles) return {error:'诗篇'+num+'未找到'};
+        const verses = json.data[0].bibles.map(b=>b.VerseSN+'　'+b.Lection).join('\n');
+        $('f-psalm-content').value = verses;
+        return {success:'诗篇'+num+'篇'};
+    } catch(e) { return {error:e.message}; }
+}
+
+const BIBLE_BOOKS = '撒上|撒下|创|出|利|民|申|书|士|得|王上|王下|代上|代下|拉|尼|斯|伯|诗|箴|传|歌|赛|耶|哀|结|但|何|珥|摩|俄|拿|弥|鸿|哈|番|该|亚|玛|太|可|路|约|徒|罗|林前|林后|加|弗|腓|西|帖前|帖后|提前|提后|多|门|来|雅|彼前|彼后|约一|约贰|约叁|犹|启';
+
+async function fetchSermonSilent(type) {
+    try {
+        const fieldId = type==='sermon1'?'f-sermon1':'f-sermon2';
+        const val = $(fieldId).value.trim();
+        if (!val) return null;
+        const firstLine = val.split('\n')[0];
+        const bookMatch = firstLine.match(new RegExp('^('+BIBLE_BOOKS+')'));
+        if (!bookMatch) return null;
+        const refText = firstLine.replace(new RegExp('^('+BIBLE_BOOKS+')'),'').replace(/[^\d.:：.\-,、\s]+$/,'').trim();
+        if (!refText) return null;
+        const rawParts = refText.split(/[.、]+/).filter(Boolean);
+        const queries = rawParts.map(p=>{
+            p=p.trim();
+            if (new RegExp('^('+BIBLE_BOOKS+')\\d').test(p)) return p;
+            if (/^\d/.test(p)) return bookMatch[1]+p;
+            if (/^[:：]\d/.test(p)) return bookMatch[1]+p;
+            return p;
+        }).filter(Boolean);
+        if (queries.length===0) return null;
+        const results = await Promise.all(queries.map(async(q)=>{
+            const resp = await fetch(BIBLE_API+'?query='+encodeURIComponent(q));
+            const json = await resp.json();
+            if (json.code!==200||!json.data) return '';
+            return json.data.map(d=>d.bibles?.map(b=>b.VerseSN+'　'+b.Lection).join('\n')||'').join('\n');
+        }));
+        const content = results.filter(Boolean).join('\n');
+        if (content) {
+            let el = $('f-'+type+'-verses');
+            if (!el) { el=document.createElement('textarea');el.id='f-'+type+'-verses';el.style.display='none';$('edit-fields').appendChild(el); }
+            el.value = content;
+        }
+        return content?{success:true}:{error:'经文未找到'};
+    } catch(e) { return {error:e.message}; }
+}
+
+// ============ MATCH ALL ============
+async function matchAll() {
+    const raw = $('paste-area').value.trim();
+    if (!raw) { showToast('请先在上方粘贴礼拜内容',true); return; }
+    showPhotoLoading(true,'解析内容...');
+    try {
+        $('edit-card').style.display = 'none';
+        await parseText();
+        const fields = ['praise1','praise2','special','hymn1','hymn2'];
+        const tasks = [];
+        for (const t of fields) { if ($('f-'+t).value.trim()) tasks.push({kind:'audio',type:t}); }
+        const n = $('f-psalm').value.trim().replace(/篇/g,'');
+        if (n&&/^\d+$/.test(n)) tasks.push({kind:'psalm'});
+        if ($('f-sermon1').value.trim()) tasks.push({kind:'sermon',type:'sermon1'});
+        if ($('f-sermon2').value.trim()) tasks.push({kind:'sermon',type:'sermon2'});
+        let audioOk=0,audioFail=0,bibleOk=0,bibleFail=0;
+        if (tasks.length>0) {
+            showPhotoLoading(true,tasks.length+'项并行搜索...');
+            const results = await Promise.allSettled(tasks.map(t=>{
+                if(t.kind==='audio')return fetchLyricsSilent(t.type);
+                if(t.kind==='psalm')return fetchPsalmSilent();
+                if(t.kind==='sermon')return fetchSermonSilent(t.type);
+            }));
+            results.forEach((r,i)=>{
+                const task=tasks[i];
+                if(r.status==='rejected'){if(task.kind==='audio')audioFail++;else bibleFail++;return;}
+                if(!r.value)return;
+                if(r.value.success){if(task.kind==='audio')audioOk++;else bibleOk++;}
+                else if(r.value.error){if(task.kind==='audio')audioFail++;else bibleFail++;}
+            });
+        }
+        let msg='匹配完成';
+        if(audioOk>0)msg+='：'+audioOk+'首音频';
+        if(bibleOk>0)msg+=', '+bibleOk+'段经文';
+        if(audioFail>0)msg+=', '+audioFail+'首未找到';
+        showPhotoLoading(false);
+        showToast(msg);
+        renderEditFields();
+        $('edit-card').style.display = 'block';
+        $('edit-card').scrollIntoView({behavior:'smooth',block:'start'});
+        saveHistory();
+    } catch(err) {
+        console.error(err);
+        showPhotoLoading(false);
+        showToast('出错: '+err.message,true);
+    }
+}
+
+function matchAllManual() { matchAll(); }
+
+async function oneClickGenerate() {
+    await matchAll();
+    // After matching, show verification
+    setTimeout(()=>showVerify(),500);
+}
+
+// ============ VERIFY ============
+function showVerify() {
+    const data = collectSlideData();
+    const items = [
+        {label:'赞美 1',value:data.praise1,lyrics:!!data.praise1Lyrics},
+        {label:'赞美 2',value:data.praise2,lyrics:!!data.praise2Lyrics},
+        {label:'特颂',value:data.special,lyrics:!!data.specialLyrics},
+        {label:'诗篇',value:data.psalm+'篇',hasContent:!!data.psalmContent},
+        {label:'新编 1',value:data.hymn1,lyrics:!!data.hymn1Lyrics},
+        {label:'新编 2',value:data.hymn2,lyrics:!!data.hymn2Lyrics},
+        {label:'证道 1',value:data.sermon1},
+        {label:'证道 2',value:data.sermon2},
+        {label:'论坛',value:data.forum},
+        {label:'日期',value:data.date},
+    ];
+    let html = '';
+    items.filter(i=>i.value).forEach(i=>{
+        let status = '✅';
+        if (i.lyrics !== undefined && !i.lyrics) status = '⚠️ 无歌词';
+        if (i.hasContent !== undefined && !i.hasContent) status = '⚠️ 无内容';
+        html += '<div class="verify-item"><div class="v-title">'+status+' '+i.label+'</div><div class="v-detail">'+esc(i.value)+(i.lyrics!==undefined?(i.lyrics?' (有歌词)':' (未匹配歌词)'):'')+'</div></div>';
+    });
+    $('verify-list').innerHTML = html || '<div class="hint">未找到可验证的内容</div>';
+    $('verify-summary').textContent = items.filter(i=>i.value).length+' 项待确认';
+    $('verify-card').style.display = 'block';
+    $('verify-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function closeVerify() { $('verify-card').style.display = 'none'; }
+
+function confirmVerify() {
+    $('verify-card').style.display = 'none';
+    buildSlideshow();
+}
+
+// ============ BUILD SLIDES ============
+function splitVerseToPages(text,maxPerPage) {
+    maxPerPage = maxPerPage||3;
+    if(!text||!text.trim())return[];
+    const parts=text.split(/(?<=[。！？；])/g);
+    const sentences=[];
+    for(var i=0;i<parts.length;i++){var s=parts[i].trim();if(s)sentences.push(s);}
+    if(sentences.length===0)return[text.trim()];
+    var pages=[];
+    for(var j=0;j<sentences.length;j+=maxPerPage)pages.push(sentences.slice(j,j+maxPerPage).join(''));
+    return pages.map(function(p){return p.trim()}).filter(function(p){return p});
+}
+
+function buildSlides(data) {
+    const slides=[],tocSections=[];
+    const insertCP=anchor=>{const pages=buildCustomSlidesAt(anchor);for(const cs of pages){slides.push(cs);tocSections.push({name:cs.section,slideIndex:slides.length-1})}};
+    
+    slides.push({type:'cover',data,section:'开篇'});tocSections.push({name:'开篇',slideIndex:0});
+    slides.push({type:'date-title',data});insertCP('开篇');
+    
+    [['praise1','praise1Lyrics','献上赞美'],['praise2','praise2Lyrics','献上赞美']].forEach(([nk,lk,label])=>{
+        const name=data[nk],lyrics=data[lk];
+        if(!name)return;
+        slides.push({type:'hymn',label,text:name,section:label,audioKey:nk});tocSections.push({name:label,slideIndex:slides.length-1});
+        if(lyrics){const lines=lyrics.split('\n').filter(l=>l.trim());for(let i=0;i<lines.length;i+=4)slides.push({type:'lyrics',text:lines.slice(i,i+4).join('\n'),audioKey:nk})}
+    });insertCP('赞美');
+    
+    slides.push({type:'stand-up-fixed'});
+    
+    if(data.psalmContent){
+        const psalmLabel='诗篇 '+data.psalm+'篇';
+        slides.push({type:'psalm-title',label:psalmLabel,section:psalmLabel});tocSections.push({name:psalmLabel,slideIndex:slides.length-1});
+        const versePages=splitVerseToPages(data.psalmContent,2);
+        versePages.forEach(page=>slides.push({type:'psalm-content',label:psalmLabel,text:page}));
+    }else if(data.psalm){
+        const psalmLabel='诗篇 '+data.psalm+'篇';
+        slides.push({type:'psalm-title',label:psalmLabel,section:psalmLabel});tocSections.push({name:psalmLabel,slideIndex:slides.length-1});
+    }insertCP('经文');
+    
+    if(data.hymn1){
+        const h1Label='新编赞美1';
+        slides.push({type:'hymn',label:'赞美',text:'新编赞美 '+data.hymn1,section:h1Label,audioKey:'hymn1'});tocSections.push({name:h1Label,slideIndex:slides.length-1});
+        if(data.hymn1Lyrics){const lines=data.hymn1Lyrics.split('\n').filter(l=>l.trim());for(let i=0;i<lines.length;i+=4)slides.push({type:'lyrics',text:lines.slice(i,i+4).join('\n'),audioKey:'hymn1'})}
+    }
+    
+    slides.push({type:'creed-title',section:'信仰告白'});tocSections.push({name:'信仰告白',slideIndex:slides.length-1});
+    for(const line of FIXED.creed)slides.push({type:'creed',text:line});insertCP('信仰告白');
+    
+    if(data.hymn2){
+        const h2Label='新编赞美2';
+        slides.push({type:'hymn',label:'请坐下',text:'新编赞美 '+data.hymn2,section:h2Label,audioKey:'hymn2'});tocSections.push({name:h2Label,slideIndex:slides.length-1});
+        if(data.hymn2Lyrics){const lines=data.hymn2Lyrics.split('\n').filter(l=>l.trim());for(let i=0;i<lines.length;i+=4)slides.push({type:'lyrics',text:lines.slice(i,i+4).join('\n'),audioKey:'hymn2'})}
+    }
+    
+    if(data.special){
+        slides.push({type:'hymn',label:'特颂',text:data.special,section:'特颂',audioKey:'special'});tocSections.push({name:'特颂',slideIndex:slides.length-1});
+        if(data.specialLyrics){const lines=data.specialLyrics.split('\n').filter(l=>l.trim());for(let i=0;i<lines.length;i+=4)slides.push({type:'lyrics',text:lines.slice(i,i+4).join('\n'),audioKey:'special'})}
+    }
+    
+    [data.sermon1,data.sermon2].forEach((sermon,idx)=>{
+        if(!sermon)return;
+        const label='证道 第'+(idx===0?'一':'二')+'讲';
+        const lines=sermon.split('\n').filter(l=>l.trim());
+        const firstLine=lines[0]||'';
+        const verseLines=lines.length>1?lines.slice(1):[];
+        slides.push({type:'sermon',ref:label,text:firstLine,section:label});tocSections.push({name:label,slideIndex:slides.length-1});
+        if(verseLines.length>0){
+            const versePages=splitVerseToPages(verseLines.join(''),2);
+            versePages.forEach(page=>slides.push({type:'sermon-verse',label,text:page}));
+        }
+    });insertCP('证道');
+    
+    slides.push({type:'hymn',label:'欢迎赞美',text:FIXED.welcome+' '+FIXED.welcomeName,section:'欢迎赞美'});tocSections.push({name:'欢迎赞美（24）',slideIndex:slides.length-1});
+    for(const lp of FIXED.welcomeLyrics)slides.push({type:'lyrics',label:FIXED.welcomeName,text:lp,audioKey:'praise-welcome'});
+    
+    slides.push({type:'hymn',label:'请起立',text:FIXED.finalHymn+' '+FIXED.finalHymnName,section:'结束赞美'});tocSections.push({name:'结束赞美（134）',slideIndex:slides.length-1});
+    for(const lp of FIXED.finalHymnLyrics)slides.push({type:'lyrics',label:FIXED.finalHymnName,text:lp,audioKey:'praise-final'});
+    
+    slides.push({type:'simple',title:'牧师祝福祷告',section:'祝福祷告'});tocSections.push({name:'祝福祷告',slideIndex:slides.length-1});
+    slides.push({type:'forum',data,section:'论坛分享'});tocSections.push({name:'论坛分享',slideIndex:slides.length-1});
+    insertCP('论坛');insertCP('末尾');
+    slides.push({type:'ending',section:'以马内利'});tocSections.push({name:'以马内利',slideIndex:slides.length-1});
+    slides._toc=tocSections;
+    return slides;
+}
+
+function buildCustomSlidesAt(anchor){return customSlides.filter(cs=>(cs.insertAfter||'论坛')===anchor)}
+
+// ============ SLIDESHOW ============
+async function buildSlideshow() {
+    showPhotoLoading(true,'正在生成幻灯片...');
+    await new Promise(r=>setTimeout(r,300));
+    try {
+        const data = collectSlideData();
+        saveRecord(data);
+        slides = buildSlides(data);
+        currentSlide = 0;
+        renderSlide();
+        buildToc();
+        $('slideshow-overlay').classList.add('show');
+        $('side-panel').style.display = 'none';
+        showPhotoLoading(false);
+        updateSlideCounter();
+    } catch(e) {
+        showPhotoLoading(false);
+        showToast('出错: '+e.message, true);
+    }
+}
+
+function renderSlide() {
+    const page = $('slide-page');
+    const s = slides[currentSlide];
+    let html = '';
+    page.style.background = '';
+    page.style.backgroundImage = '';
+    
+    switch(s.type) {
+        case 'cover': html = '<div class="s-cover-label">上周回顾</div><div class="s-body" style="margin-top:16px;font-size:calc(clamp(18px,3.5vw,64px)*var(--fs-scale));line-height:1.5">'+esc(s.data.lastweek)+'</div>'; break;
+        case 'date-title':
+            if(s.data.declaration) html = '<div class="s-footer">'+esc(s.data.declaration).replace(/\n/g,'<br>')+'</div>';
+            page.style.backgroundImage = "url('"+(coverImgUrl||DEFAULT_COVER_BG_DATA)+"')";
+            page.style.backgroundSize = 'cover'; page.style.backgroundPosition = 'center';
+            break;
+        case 'stand-up-fixed':
+            html = '<div class="s-title">请起立</div><div class="s-subtitle">'+esc(FIXED.standVerse)+'</div><div class="s-body">'+esc(FIXED.standVerseText)+'</div>';
+            break;
+        case 'psalm-title': html = '<div class="s-title">'+esc(s.label)+'</div>'; break;
+        case 'psalm-content': html = '<div class="s-body" style="margin-top:0;font-size:calc(clamp(27px,5.5vw,80px)*var(--fs-scale))">'+esc(s.text)+'</div>'; break;
+        case 'hymn': html = '<div class="s-title">'+esc(s.label)+'</div><div class="s-body" style="font-size:calc(clamp(27px,5.5vw,80px)*var(--fs-scale))">'+esc(s.text)+'</div>'; break;
+        case 'lyrics': html = '<div class="s-body" style="margin-top:0;font-size:calc(clamp(27px,5.5vw,80px)*var(--fs-scale))">'+esc(s.text)+'</div>'; break;
+        case 'creed-title': html = '<div class="s-title">信仰告白</div><div class="s-subtitle">使徒信经</div>'; break;
+        case 'creed': html = '<div class="s-body" style="margin-top:0;font-size:calc(clamp(26px,5vw,80px)*var(--fs-scale))">'+esc(s.text)+'</div>'; break;
+        case 'sermon': html = '<div class="s-title">证道</div><div class="s-subtitle">'+esc(s.ref)+'</div><div class="s-body">'+esc(s.text)+'</div>'; break;
+        case 'sermon-verse': html = '<div class="s-subtitle" style="margin-top:0">'+esc(s.label)+'</div><div class="s-body" style="margin-top:8px;font-size:calc(clamp(27px,5.5vw,80px)*var(--fs-scale))">'+esc(s.text)+'</div>'; break;
+        case 'simple': html = '<div class="s-title">'+esc(s.title)+'</div>'; break;
+        case 'forum': html = '<div class="s-title">论坛分享</div>'+(s.data.forum?'<div class="s-body">'+esc(s.data.forum)+'</div>':''); break;
+        case 'ending': html = '<div class="s-title" style="font-size:calc(clamp(36px,7vw,120px)*var(--fs-scale))">以马内利</div>'; break;
+    }
+    page.innerHTML = html;
+    updateTocHighlight();
+    updateSlideCounter();
+}
+
+function buildToc() {
+    const list = $('slide-toc-list');
+    const toc = slides._toc||[];
+    list.innerHTML = toc.map((item,i)=>{
+        const cls = 'slide-toc-item'+(i===0||(i>0&&toc[i].name!==toc[i-1].name)?' section-start':'');
+        const abbr = getSectionAbbr(item.name);
+        return '<button class="'+cls+'" data-index="'+item.slideIndex+'" onclick="goToSection('+i+')" title="'+esc(item.name)+'"><span class="toc-num">'+(i+1)+'</span><span class="toc-label">'+esc(abbr)+'</span></button>';
+    }).join('');
+}
+
+function toggleToc() { tocVisible=!tocVisible; $('slide-toc-panel').classList.toggle('show',tocVisible); }
+function goToSection(i) { const toc=slides._toc||[]; if(toc[i]!==undefined){currentSlide=toc[i].slideIndex;renderSlide()} }
+function updateTocHighlight() {
+    const toc=slides._toc||[]; let active=-1;
+    for(let i=toc.length-1;i>=0;i--){if(currentSlide>=toc[i].slideIndex){active=i;break}}
+    document.querySelectorAll('.slide-toc-item').forEach((el,i)=>el.classList.toggle('current',i===active));
+    if(active>=0){const items=document.querySelectorAll('.slide-toc-item');if(items[active])items[active].scrollIntoView({block:'nearest',behavior:'smooth'})}
+}
+function updateSlideCounter() { $('slide-counter').textContent = (currentSlide+1)+' / '+slides.length; }
+function nextSlide() { if(currentSlide<slides.length-1){currentSlide++;renderSlide()} }
+function prevSlide() { if(currentSlide>0){currentSlide--;renderSlide()} }
+function closeSlideshow(backToEdit) {
+    $('slideshow-overlay').classList.remove('show');
+    $('slide-toc-panel').classList.remove('show');
+    $('side-panel').style.display = '';
+    tocVisible = false;
+    if(backToEdit && $('edit-card').style.display!=='none') $('edit-card').scrollIntoView({behavior:'smooth'});
+}
+
+// ============ FULLSCREEN ============
+function toggleFullscreen() {
+    const el = document.fullscreenElement?document:$('slideshow-overlay');
+    const btn = $('btn-fullscreen');
+    if(!document.fullscreenElement) {
+        if(el.requestFullscreen)el.requestFullscreen();
+        btn.textContent = '⛶ 退出全屏';
+    } else {
+        if(document.exitFullscreen)document.exitFullscreen();
+        btn.textContent = '⛶ 全屏';
+    }
+}
+
+// ============ GENERATE PPT ============
+async function generatePPT() {
+    showPhotoLoading(true,'正在生成PPT...');
+    await new Promise(r=>setTimeout(r,300));
+    try {
+        let pptCoverImg = coverImgUrl ? await blobUrlToDataUrl(coverImgUrl) : null;
+        let pptEndingImg = endingImgUrl ? await blobUrlToDataUrl(endingImgUrl) : null;
+        
+        let meditationAudioData = null;
+        try {
+            const audioResp = await fetch('audio/meditation.mp3');
+            if (audioResp.ok) {
+                const blob = await audioResp.blob();
+                meditationAudioData = await new Promise((resolve,reject)=>{
+                    const reader = new FileReader();
+                    reader.onloadend = ()=>resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            }
+        } catch(e) { console.warn('默想音频加载失败:',e); }
+        
+        const data = collectSlideData();
+        const slidesArr = buildSlides(data);
+        const pptx = new PptxGenJS();
+        pptx.defineLayout({name:'WIDE',width:13.333,height:7.5});
+        pptx.layout = 'WIDE';
+        const BG='5B1A6E',W='FFFFFF',G='F5D76E';
+        
+        for(const s of slidesArr) {
+            const slide = pptx.addSlide();
+            slide.background = {color:BG};
+            
+            switch(s.type) {
+                case 'cover':
+                    slide.addText('上周回顾',{x:0.5,y:0.8,w:12.333,h:0.7,fontSize:22,color:G,align:'center',fontFace:'Microsoft YaHei'});
+                    slide.addText(s.data.lastweek||'',{x:1,y:1.8,w:11.333,h:4.5,fontSize:22,color:W,align:'center',valign:'middle',fontFace:'Microsoft YaHei',lineSpacing:34});
+                    if(s.data.declaration) slide.addText(s.data.declaration,{x:1,y:5.8,w:11.333,h:1.2,fontSize:14,color:G,align:'center',valign:'bottom',fontFace:'Microsoft YaHei',lineSpacing:22});
+                    if(meditationAudioData) try{slide.addMedia({type:'audio',data:meditationAudioData})}catch(e){console.warn(e)}
+                    break;
+                case 'date-title': slide.background = {path:pptCoverImg||ensureHttps('https://oss.top237.top/2025/10/21/68f73952a3c1b.jpg')}; break;
+                case 'stand-up-fixed':
+                    slide.addText('请起立',{x:1,y:1,w:11.333,h:1,fontSize:32,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'});
+                    slide.addText(FIXED.standVerse,{x:1,y:2.0,w:11.333,h:0.8,fontSize:22,color:G,align:'center',fontFace:'Microsoft YaHei'});
+                    slide.addText(FIXED.standVerseText,{x:1,y:3.0,w:11.333,h:2.5,fontSize:28,color:W,align:'center',fontFace:'Microsoft YaHei',lineSpacing:44});
+                    break;
+                case 'psalm-title': slide.addText(s.label,{x:1,y:1,w:11.333,h:1,fontSize:32,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'}); break;
+                case 'psalm-content': slide.addText(s.text,{x:1,y:1,w:11.333,h:5.5,fontSize:24,color:W,align:'center',valign:'middle',fontFace:'Microsoft YaHei',lineSpacing:40}); break;
+                case 'hymn':
+                    slide.addText(s.label,{x:1,y:1,w:11.333,h:1,fontSize:32,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'});
+                    slide.addText(s.text,{x:1,y:2.5,w:11.333,h:2,fontSize:36,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'});
+                    break;
+                case 'lyrics': slide.addText(s.text,{x:1.5,y:0.8,w:10.333,h:6,fontSize:24,color:W,align:'center',valign:'middle',fontFace:'Microsoft YaHei',lineSpacing:38}); break;
+                case 'creed-title':
+                    slide.addText('信仰告白',{x:1,y:1,w:11.333,h:1,fontSize:32,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'});
+                    slide.addText('使徒信经',{x:1,y:2.0,w:11.333,h:1,fontSize:30,color:G,align:'center',bold:true,fontFace:'Microsoft YaHei'});
+                    break;
+                case 'creed': slide.addText(s.text,{x:1,y:2.0,w:11.333,h:4,fontSize:24,color:W,align:'center',valign:'middle',fontFace:'Microsoft YaHei',lineSpacing:38}); break;
+                case 'sermon':
+                    slide.addText('证道',{x:1,y:1,w:11.333,h:1,fontSize:32,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'});
+                    slide.addText(s.ref,{x:1,y:2.0,w:11.333,h:0.8,fontSize:22,color:G,align:'center',fontFace:'Microsoft YaHei'});
+                    slide.addText(s.text,{x:1,y:3.0,w:11.333,h:3,fontSize:28,color:W,align:'center',fontFace:'Microsoft YaHei',lineSpacing:44});
+                    break;
+                case 'sermon-verse': slide.addText(s.text,{x:1,y:1,w:11.333,h:5.5,fontSize:24,color:W,align:'center',valign:'middle',fontFace:'Microsoft YaHei',lineSpacing:40}); break;
+                case 'simple': slide.addText(s.title,{x:1,y:1,w:11.333,h:1,fontSize:32,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'}); break;
+                case 'forum':
+                    slide.addText('论坛分享',{x:1,y:1,w:11.333,h:1,fontSize:32,color:W,align:'center',bold:true,fontFace:'Microsoft YaHei'});
+                    if(s.data.forum) slide.addText(s.data.forum,{x:1,y:2.0,w:11.333,h:4.5,fontSize:24,color:W,align:'center',valign:'middle',fontFace:'Microsoft YaHei',lineSpacing:38});
+                    break;
+                case 'ending':
+                    slide.background = {path:pptEndingImg||ensureHttps('https://oss.top237.top/2026/02/13/698f201f1dcea.png')};
+                    slide.addText('以马内利',{x:0,y:0,w:13.333,h:7.5,fontSize:60,color:W,align:'center',valign:'middle',bold:true,fontFace:'Microsoft YaHei',shadow:{type:'outer',color:'000000',blur:8,offset:2,angle:45,opacity:0.5}});
+                    break;
+            }
+        }
+        
+        const date = data.date||'';
+        const fileName = date ? '礼拜程序_'+date.replace(/[./]/g,'-')+'.pptx' : '礼拜程序.pptx';
+        await pptx.writeFile({fileName});
+        showPhotoLoading(false);
+        showToast('PPT 已下载：'+fileName);
+    } catch(e) {
+        console.error(e);
+        showPhotoLoading(false);
+        showToast('PPT 生成失败: '+e.message, true);
+    }
+}
+
+async function blobUrlToDataUrl(url) {
+    if(!url) return null;
+    if(url.startsWith('data:')) return url;
+    try { const r=await fetch(url); const b=await r.blob(); return await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onloadend=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(b)}) } catch(e) {return null}
+}
+
+// ============ RECORD / HISTORY ============
+function saveRecord(data) {
+    try {
+        const record = {savedAt:new Date().toISOString(),data,pasteText:$('paste-area').value,customSlides,nextElId};
+        localStorage.setItem(RECORD_KEY,JSON.stringify(record));
+    } catch(e) {}
+}
+
+function restoreLastRecord() {
+    try {
+        const raw = localStorage.getItem(RECORD_KEY);
+        if(!raw){showToast('没有找到上次的记录',true);return}
+        const record = JSON.parse(raw);
+        if(record.pasteText) $('paste-area').value = record.pasteText;
+        if(record.data) {
+            for(const[k,v]of Object.entries(record.data)){const el=$('f-'+k);if(el)el.value=v||''}
+        }
+        if(record.customSlides) {customSlides=record.customSlides;nextElId=record.nextElId||1}
+        renderEditFields();
+        $('edit-card').style.display = 'block';
+        $('edit-card').scrollIntoView({behavior:'smooth'});
+        showToast('已恢复上次记录');
+    } catch(e) { showToast('恢复失败',true); }
+}
+
+function saveHistory() {
+    try {
+        const raw = $('paste-area').value.trim();
+        if(!raw) return;
+        const item = {ts:Date.now(),raw,fields:{}};
+        HISTORY_FIELDS.forEach(id=>{const el=$(id);if(el)item.fields[id]=el.value});
+        let hist = [];
+        try { hist = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]') } catch(e) {}
+        if(!Array.isArray(hist)) hist = [];
+        hist = hist.filter(h=>h.raw!==raw);
+        hist.unshift(item);
+        hist = hist.slice(0,5);
+        localStorage.setItem(HISTORY_KEY,JSON.stringify(hist));
+        renderHistory();
+    } catch(e) {}
+}
+
+function renderHistory() {
+    const box = $('history-list');
+    if(!box) return;
+    let hist = [];
+    try { hist = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]') } catch(e) {}
+    if(!Array.isArray(hist)||hist.length===0){box.innerHTML='<div class="hist-empty">暂无历史记录</div>';return}
+    box.innerHTML = hist.map(h=>{
+        const d = new Date(h.ts);
+        const t = (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+        const title = (h.fields['f-date']||'').trim()||(h.fields['f-praise1']||'').trim().slice(0,14)||(h.raw||'').slice(0,14)||'未命名';
+        const escTitle = title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        return '<div class="hist-item"><span class="hist-title" title="'+escTitle+'">'+escTitle+'</span><span class="hist-time">'+t+'</span><button class="hist-restore" onclick="restoreHistory('+h.ts+')">恢复</button></div>';
+    }).join('');
+}
+
+function restoreHistory(ts) {
+    try {
+        let hist = [];
+        try { hist = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]') } catch(e) {}
+        const h = hist.find(x=>x.ts===ts);
+        if(!h){showToast('历史记录不存在',true);return}
+        $('paste-area').value = h.raw||'';
+        Object.entries(h.fields||{}).forEach(([id,val])=>{const el=$(id);if(el)el.value=val||''});
+        $('edit-card').style.display = 'block';
+        renderEditFields();
+        _lastAutoParsedRaw = (h.raw||'').trim();
+        showToast('已恢复历史记录');
+        $('edit-card').scrollIntoView({behavior:'smooth',block:'start'});
+    } catch(e) { console.error(e); }
+}
+
+// ============ AUTO PARSE ============
+function onPasteInput() {
+    if(!_autoParseEnabled) return;
+    const raw = $('paste-area').value.trim();
+    if(!raw) return;
+    if(raw===_lastAutoParsedRaw) return;
+    clearTimeout(_autoParseTimer);
+    _autoParseTimer = setTimeout(()=>{
+        const cur = $('paste-area').value.trim();
+        if(!cur||cur===_lastAutoParsedRaw) return;
+        matchAllAuto();
+    },800);
+}
+
+async function matchAllAuto() {
+    const raw = $('paste-area').value.trim();
+    if(!raw||raw===_lastAutoParsedRaw) return;
+    const hint = $('parse-hint');
+    if(hint) hint.textContent = '自动解析中…';
+    try {
+        $('edit-card').style.display = 'none';
+        await parseText();
+        const fields = ['praise1','praise2','special','hymn1','hymn2'];
+        const tasks = [];
+        for(const t of fields){if($('f-'+t).value.trim())tasks.push({kind:'audio',type:t})}
+        if($('f-psalm').value.trim().replace(/篇/g,'').match(/^\d+$/))tasks.push({kind:'psalm'});
+        if($('f-sermon1').value.trim())tasks.push({kind:'sermon',type:'sermon1'});
+        if($('f-sermon2').value.trim())tasks.push({kind:'sermon',type:'sermon2'});
+        if(tasks.length>0) await Promise.allSettled(tasks.map(t=>{
+            if(t.kind==='audio')return fetchLyricsSilent(t.type);
+            if(t.kind==='psalm')return fetchPsalmSilent();
+            if(t.kind==='sermon')return fetchSermonSilent(t.type);
+        }));
+        _lastAutoParsedRaw = raw;
+        saveHistory();
+        renderEditFields();
+        $('edit-card').style.display = 'block';
+        if(hint) hint.textContent = '已自动解析 · 可点「生成幻灯片」或下方按钮核对';
+    } catch(e) {
+        console.error(e);
+        if(hint) hint.textContent = '自动解析失败，请点「解析内容」手动重试';
+    }
+}
+
+function toggleAutoParse() {
+    const cb = $('auto-parse-toggle');
+    _autoParseEnabled = cb?cb.checked:true;
+    try { localStorage.setItem('wpg_auto_parse',_autoParseEnabled?'1':'0') } catch(e) {}
+    const hint = $('parse-hint');
+    if(!hint) return;
+    if(!_autoParseEnabled) hint.textContent = '已关闭自动解析 · 粘贴后点「解析内容」或「帮我做」';
+    else if(hint.textContent.indexOf('已关闭')===0) hint.textContent = '按「帮我做」自动完成解析、搜索歌词音频、生成幻灯片';
+}
+
+// ============ ELDER MODE ============
+function toggleElderMode() {
+    const on = document.documentElement.classList.toggle('elder-mode');
+    const link = $('eldermode-link');
+    if(link) link.textContent = on?'👴 老年版':'👓 标准版';
+    try { localStorage.setItem('wpg_elder_mode',on?'1':'0') } catch(e) {}
+}
+
+// ============ RESET ============
+function resetAll() {
+    $('edit-card').style.display = 'none';
+    $('paste-area').value = '';
+    ['f-lastweek','f-date','f-praise1','f-praise2','f-special','f-psalm','f-psalm-content','f-hymn1','f-hymn2','f-sermon1','f-sermon2','f-forum','f-declaration'].forEach(id=>{const el=$(id);if(el)el.value=''});
+    ['praise1-lyrics','praise2-lyrics','special-lyrics','hymn1-lyrics','hymn2-lyrics'].forEach(id=>{
+        let el = $('f-'+id); if(el) el.value = '';
+    });
+    customSlides=[]; nextElId=1;
+    _lastAutoParsedRaw = '';
+    $('parse-hint').textContent = '按「帮我做」自动完成解析、搜索歌词音频、生成幻灯片';
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============ STUBS ============
+function openPhotoCapture(){showToast('拍照识别功能开发中')}
+function handlePhotoUpload(input){showToast('图片上传功能开发中')}
+function downloadAllAudio(){showToast('全部音频下载功能：逐个打开下载窗口')}
+function onAudioSelected(key,input){showToast('音频上传功能开发中')}
+function togglePlay(){showToast('音频播放功能开发中')}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded',()=>{
+    renderHistory();
+    try {
+        const ap = localStorage.getItem('wpg_auto_parse');
+        _autoParseEnabled = (ap!=='0');
+        const cb = $('auto-parse-toggle');
+        if(cb) cb.checked = _autoParseEnabled;
+    } catch(e) {}
+    try {
+        const em = localStorage.getItem('wpg_elder_mode');
+        if(em==='0') {
+            document.documentElement.classList.remove('elder-mode');
+            const link = $('eldermode-link');
+            if(link) link.textContent = '👓 标准版';
+        }
+    } catch(e) {}
+    // Init hidden field elements
+    const hiddenFields = ['f-praise1-lyrics','f-praise2-lyrics','f-special-lyrics','f-hymn1-lyrics','f-hymn2-lyrics','f-psalm-content'];
+    hiddenFields.forEach(id=>{
+        if(!$(id)){const ta=document.createElement('textarea');ta.id=id;ta.style.display='none';document.body.appendChild(ta)}
+    });
+});
+</script>
+
+</body>
+</html>
