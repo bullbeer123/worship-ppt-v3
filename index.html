@@ -6,7 +6,6 @@
     <title>主日礼拜PPT生成器</title>
     <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
-/* ============ RESET & VARIABLES ============ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 :root{
@@ -26,47 +25,21 @@ html{scroll-behavior:smooth}
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100dvh;-webkit-font-smoothing:antialiased}
 input,textarea,select,button{font-family:inherit}
-/* ============ HERO ============ */
-.hero{background:var(--hero-bg);text-align:center;padding:60px 20px 50px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 30%,rgba(124,58,237,0.15) 0%,transparent 50%),radial-gradient(circle at 70% 70%,rgba(99,102,241,0.1) 0%,transparent 50%);pointer-events:none}
-.hero-content{position:relative;z-index:1;max-width:720px;margin:0 auto}
-.hero h1{font-size:clamp(28px,6vw,48px);font-weight:800;color:#fff;letter-spacing:-0.02em;margin-bottom:12px;line-height:1.2}
-.hero h1 span{background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{font-size:clamp(15px,2.5vw,18px);color:rgba(255,255,255,0.7);margin-bottom:28px}
-.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.btn-cta{display:inline-flex;align-items:center;gap:6px;padding:14px 32px;border-radius:50px;font-size:16px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;text-decoration:none}
-.btn-cta-primary{background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,0.4)}
-.btn-cta-primary:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(124,58,237,0.5)}
-.btn-cta-secondary{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);backdrop-filter:blur(10px)}
-.btn-cta-secondary:hover{background:rgba(255,255,255,0.15)}
-/* ============ FEATURES & STEPS ============ */
-.features{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:720px;margin:0 auto 20px;padding:0 16px}
-.feature-item{text-align:center;padding:20px 12px;background:var(--card-bg);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border-light)}
-.feature-item .f-icon{font-size:28px;margin-bottom:8px}
-.feature-item .f-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
-.feature-item .f-desc{font-size:12px;color:var(--text-secondary)}
-.steps{display:flex;gap:16px;justify-content:center;max-width:720px;margin:0 auto 20px;padding:0 16px;flex-wrap:wrap}
-.step{flex:1;min-width:120px;text-align:center;padding:20px 16px;background:var(--card-bg);border-radius:var(--radius-lg);box-shadow:var(--shadow);border:1px solid var(--border-light)}
-.step-num{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:8px}
-.step h4{font-size:14px;color:var(--text);margin-bottom:4px}
-.step p{font-size:12px;color:var(--text-secondary);line-height:1.4}
-/* ============ LAYOUT ============ */
-.app{max-width:720px;margin:-30px auto 40px;padding:0 16px;position:relative;z-index:2}
-@media(min-width:768px){.app{max-width:760px;padding:0 24px 8px}}
-@media(min-width:1024px){.app{max-width:800px}}
+.app{max-width:520px;margin:0 auto;padding:20px 16px 40px;display:flex;flex-direction:column;gap:20px}
+@media(min-width:768px){.app{max-width:680px;padding:32px 24px 48px}}
+@media(min-width:1024px){.app{max-width:760px}}
 .header{text-align:center;padding:8px 0 4px}
 .header h1{font-size:22px;font-weight:600;letter-spacing:0.02em;margin-bottom:2px}
 .header p{font-size:14px;color:var(--text-secondary)}
-.section{background:var(--card-bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow);margin-bottom:20px;transition:box-shadow 0.3s}
+.section{background:var(--card-bg);border:1px solid var(--border-light);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;gap:16px;box-shadow:var(--shadow);transition:box-shadow 0.3s}
 .section:hover{box-shadow:var(--shadow-lg)}
 .section-header{display:flex;justify-content:space-between;align-items:center}
-.section-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-title{font-size:16px;font-weight:700}
 .section-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;background:var(--primary-light);color:var(--primary)}
 .paste-area{width:100%;min-height:260px;padding:18px;border:2px dashed var(--border);border-radius:var(--radius);color:var(--text);font-size:15px;line-height:1.8;resize:vertical;outline:none;background:var(--bg);transition:border-color 0.2s}
 .paste-area:focus{border-color:var(--primary);border-style:solid;box-shadow:0 0 0 3px rgba(124,58,237,0.1)}
 .paste-area::placeholder{color:var(--text-muted)}
 @media(min-width:768px){.paste-area{min-height:220px;font-size:16px}}
-/* ============ BUTTONS ============ */
 .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 20px;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;min-height:48px}
 .btn:active{transform:scale(0.97)}
@@ -86,7 +59,6 @@ input,textarea,select,button{font-family:inherit}
 .hint{font-size:13px;color:var(--text-muted);text-align:center;padding:6px 0 0;border-top:1px solid var(--border-light)}
 .auto-toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none;margin-top:8px}
 .auto-toggle input{width:16px;height:16px;accent-color:var(--primary);cursor:pointer}
-/* ============ FIELD CARDS ============ */
 .field-card{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-light);gap:14px}
 .field-card:last-of-type{border-bottom:none}
 .field-label{font-size:14px;font-weight:600;color:var(--text-secondary);min-width:56px;flex-shrink:0}
@@ -102,11 +74,9 @@ input,textarea,select,button{font-family:inherit}
 .badge-warn{background:var(--warning-bg);color:var(--warning)}
 .badge-err{background:var(--error-bg);color:var(--error)}
 .field-error{border:1.5px solid var(--error)!important;background:var(--error-bg)!important}
-
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:999;padding:12px 24px;border-radius:50px;font-size:14px;font-weight:500;background:#1f2937;color:#fff;opacity:0;pointer-events:none;transition:opacity 0.3s;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2)}
 .toast.show{opacity:1}
 .toast.error{background:var(--error);color:#fff}
-/* ============ LOADING ============ */
 .loading-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(12,7,24,0.85);z-index:300;justify-content:center;align-items:center;flex-direction:column;gap:16px;backdrop-filter:blur(4px)}
 .loading-overlay.show{display:flex}
 .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
@@ -114,7 +84,6 @@ input,textarea,select,button{font-family:inherit}
 .loading-text{font-size:16px;color:rgba(255,255,255,0.8);font-weight:500}
 .progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .progress-bar-fill{height:100%;background:var(--primary);border-radius:2px;transition:width 0.3s}
-/* ============ SLIDESHOW ============ */
 .slide-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0c0718;z-index:280;flex-direction:column}
 .slide-overlay.show{display:flex}
 .slide-stage{flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -132,7 +101,6 @@ input,textarea,select,button{font-family:inherit}
 .slide-ctrl-btn:hover{border-color:rgba(255,255,255,0.3);color:#fff}
 .slide-ctrl-btn.active{background:var(--primary);border-color:var(--primary);color:#fff}
 .slide-counter{font-size:14px;color:rgba(255,255,255,0.5);min-width:48px;text-align:center}
-/* ============ LEFT TOC ============ */
 .slide-toc-panel{position:fixed;left:0;top:0;width:180px;height:100dvh;background:rgba(15,7,32,0.97);border-right:1px solid rgba(255,255,255,0.08);z-index:290;transform:translateX(-100%);transition:transform 0.25s ease;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:3px}
 .slide-toc-panel.show{transform:translateX(0)}
 .slide-toc-item{display:flex;align-items:center;gap:6px;border-radius:6px;background:rgba(255,255,255,0.04);border:none;cursor:pointer;font-size:12px;color:rgba(255,255,255,0.5);transition:all 0.15s;padding:8px 10px;text-align:left;width:100%;font-family:inherit}
@@ -149,7 +117,6 @@ input,textarea,select,button{font-family:inherit}
 .audio-time{font-size:11px;color:rgba(255,255,255,0.4);min-width:80px;text-align:center}
 .audio-progress{flex:1;height:4px;-webkit-appearance:none;background:rgba(255,255,255,0.1);border-radius:2px;cursor:pointer}
 .audio-progress::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--primary)}
-/* ============ SIDEBAR ============ */
 .side-panel{position:fixed;right:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;z-index:50}
 @media(max-width:768px){.side-panel{display:none}}
 .side-btn{padding:10px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--card-bg);color:var(--text-secondary);font-size:12px;cursor:pointer;text-align:center;transition:all 0.15s;min-width:52px;box-shadow:var(--shadow);font-family:inherit}
@@ -157,11 +124,9 @@ input,textarea,select,button{font-family:inherit}
 .side-btn.done{border-color:var(--success);color:var(--success)}
 .side-label{font-size:13px;font-weight:600;display:block}
 .side-hint{font-size:10px;color:var(--text-muted);display:block;margin-top:1px}
-
 .verify-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:10px}
 .verify-item .v-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
 .verify-item .v-detail{font-size:13px;color:var(--text-secondary);line-height:1.5}
-
 .history-box{border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;background:var(--bg);margin-top:8px}
 .history-box summary{font-size:14px;font-weight:600;cursor:pointer;color:var(--text-secondary);list-style:none;padding:2px 0;outline:none}
 .history-box summary::-webkit-details-marker{display:none}
@@ -171,18 +136,13 @@ input,textarea,select,button{font-family:inherit}
 .hist-restore{font-size:12px;padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--primary);background:transparent;color:var(--primary);cursor:pointer;flex-shrink:0;transition:all 0.15s}
 .hist-restore:hover{background:var(--primary);color:#fff}
 .hist-empty{font-size:13px;color:var(--text-muted);padding:8px 0;text-align:center}
-
 .ai-badge{display:inline-block;font-size:11px;padding:1px 10px;border-radius:10px;margin-left:8px;vertical-align:middle;font-weight:500;transition:all 0.3s}
 .ai-badge-on{background:var(--success-bg);color:var(--success)}
 .ai-badge-off{background:var(--error-bg);color:var(--error)}
-
-.eldermode-toggle{font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none;text-decoration:underline;text-underline-offset:3px;transition:color 0.2s;display:inline-block;margin-left:6px}
+.eldermode-toggle{font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none;text-decoration:underline;text-underline-offset:3px;display:inline-block;margin-left:6px}
 .eldermode-toggle:hover{color:var(--primary)}
-/* ============ ELDER MODE ============ */
 html.elder-mode body{font-size:18px;line-height:1.8}
-html.elder-mode .app{max-width:780px}
-html.elder-mode .hero h1{font-size:clamp(32px,6vw,52px)}
-html.elder-mode .hero p{font-size:clamp(16px,2.5vw,19px)}
+html.elder-mode .app{max-width:580px}
 html.elder-mode .section{padding:28px;gap:20px}
 html.elder-mode .section-title{font-size:18px}
 html.elder-mode .paste-area{min-height:300px;font-size:17px;padding:22px;line-height:2}
@@ -199,50 +159,15 @@ html.elder-mode .slide-toc-item{padding:10px 8px;font-size:14px}
 html.elder-mode .history-box summary{font-size:16px}
 html.elder-mode .hist-title{font-size:14px}
 html.elder-mode .side-btn{font-size:14px;padding:12px}
-/* ============ FOOTER ============ */
-.footer{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px}
-/* ============ RESPONSIVE ============ */
-@media(max-width:640px){
-    .section{padding:20px;border-radius:var(--radius)}
-    .hero{padding:40px 16px 36px}
-    .app{margin-top:-20px;padding:0 8px}
-    .btn-grid{grid-template-columns:1fr}
-    .steps{flex-direction:column}
-    .features{grid-template-columns:1fr}
-}
+@media(min-width:768px){html.elder-mode .app{max-width:720px}}
+@media(min-width:1024px){html.elder-mode .app{max-width:800px}}
 </style>
 </head>
 <body>
 
 <div class="app">
     <!-- Header -->
-    
-<section class="hero">
-    <div class="hero-content">
-        <h1>主日礼拜 <span>PPT生成器</span></h1>
-        <p>粘贴礼拜内容，AI 自动匹配诗歌、经文与音频，秒级生成专业投屏幻灯片</p>
-        <div class="hero-cta">
-            <button class="btn-cta btn-cta-primary" onclick="document.getElementById('input-section').scrollIntoView({behavior:'smooth'});document.getElementById('paste-area').focus()">开始制作</button>
-            <button class="btn-cta btn-cta-secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">了解更多</button>
-        </div>
-    </div>
-</section>
-
-<div class="app">
-
-<div id="features" class="features">
-    <div class="feature-item"><div class="f-icon">📖</div><div class="f-title">智能解析</div><div class="f-desc">粘贴通告文字，自动提取诗歌、经文、讲道信息</div></div>
-    <div class="feature-item"><div class="f-icon">🎵</div><div class="f-title">自动配乐</div><div class="f-desc">5万+赞美诗歌词与音频库，智能匹配</div></div>
-    <div class="feature-item"><div class="f-icon">✨</div><div class="f-title">一键生成</div><div class="f-desc">核对确认后直接下载 PPT，投屏即用</div></div>
-</div>
-
-<div class="steps">
-    <div class="step"><div class="step-num">1</div><h4>粘贴内容</h4><p>把手机备忘录中的礼拜内容粘贴到下方</p></div>
-    <div class="step"><div class="step-num">2</div><h4>确认匹配</h4><p>AI 自动匹配诗歌歌词与经文，逐项核对</p></div>
-    <div class="step"><div class="step-num">3</div><h4>下载投屏</h4><p>一键生成 PPT 文件，下载后即可投屏播放</p></div>
-</div>
-
-<div class="header">
+    <div class="header">
         <h1>主日礼拜PPT生成器</h1>
         <p>粘贴内容，一键生成幻灯片 <span class="eldermode-toggle" id="eldermode-link" onclick="toggleElderMode()">👴 老年版</span></p>
     </div>
@@ -2066,10 +1991,10 @@ function buildSlides(data) {
         }
     }
 
-    // 9. 牧师证道 — each sermon: title + verses split into pages (up to 2 sentences)
+    // 9. Sermon — each sermon: title + verses split into pages (up to 2 sentences)
     [data.sermon1, data.sermon2].forEach((sermon, idx) => {
         if (!sermon) return;
-        const label = '证道 第' + (idx === 0 ? '一' : '二') + '讲';
+        const label = '第' + (idx === 0 ? '一' : '二') + '讲';
         const lines = sermon.split('\n').filter(l => l.trim());
         const firstLine = lines[0] || '';
         const verseLines = lines.length > 1 ? lines.slice(1) : [];
@@ -2240,7 +2165,7 @@ function renderSlide() {
             html = `<div class="s-body" style="margin-top:0;font-size:calc(clamp(27px,5.5vw,80px) * var(--fs-scale));">${esc(s.text)}</div>`;
             break;
         case 'sermon':
-            html = `<div class="s-title">证道</div><div class="s-subtitle">${esc(s.ref)}</div><div class="s-body">${esc(s.text)}</div>`;
+            html = `<div class="s-title" style="display:none"></div><div class="s-subtitle">${esc(s.ref)}</div><div class="s-body">${esc(s.text)}</div>`;
             break;
         case 'sermon-verse':
             html = `<div class="s-subtitle" style="margin-top:0;">${esc(s.label)}</div><div class="s-body" style="margin-top:8px;font-size:calc(clamp(27px,5.5vw,80px) * var(--fs-scale));">${esc(s.text)}</div>`;
@@ -3411,7 +3336,7 @@ async function generatePPT() {
                     slide.addText(s.text, { x: 1.5, y: 0.8, w: 10.333, h: 6, fontSize: 24, color: W, align: 'center', valign: 'middle', fontFace: 'Microsoft YaHei', lineSpacing: 38 });
                     break;
                 case 'sermon':
-                    secTitle(slide, '证道');
+                    secTitle(slide, '');
                     slide.addText(s.ref, { x: 1, y: 2.0, w: 11.333, h: 0.8, fontSize: 22, color: G, align: 'center', fontFace: 'Microsoft YaHei' });
                     slide.addText(s.text, { x: 1, y: 3.0, w: 11.333, h: 3, fontSize: 28, color: W, align: 'center', fontFace: 'Microsoft YaHei', lineSpacing: 44 });
                     break;
@@ -4345,7 +4270,5 @@ if ('serviceWorker' in navigator) {
 function toggleElderMode(){var h=document.documentElement;var on=h.classList.toggle("elder-mode");var l=document.getElementById("eldermode-link");if(l)l.textContent=on?"老年版":"标准版";try{localStorage.setItem("wpg_elder_mode",on?"1":"0")}catch(e){}}
 </script>
 
-</div>
-<footer class="footer"><p>主日礼拜PPT生成器 · 服侍教会</p></footer>
 </body>
 </html>
