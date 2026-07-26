@@ -212,8 +212,8 @@ html.elder-mode .side-btn{font-size:14px;padding:12px}
         <div class="field-card"><span class="field-label">新编 2</span><div class="field-value"><input type="text" id="f-hymn2" placeholder="258 耶稣领我歌"><textarea id="f-hymn2-lyrics" placeholder="歌词自动匹配，也可粘贴替换" rows="3" style="display:none;margin-top:6px;"></textarea><div class="field-badges" id="hymn2-badges"></div><div class="field-actions" style="margin-top:4px;display:flex;gap:4px;justify-content:flex-end;"><button class="btn-ghost-sm" onclick="fetchLyrics('hymn2')" style="display:none;" id="btn-fetch-hymn2">搜歌词</button><button class="btn-ghost-sm" onclick="pickAudio('hymn2')" style="display:none;" id="btn-audio-hymn2">🎵 本地音频</button><button class="btn-ghost-sm" onclick="downloadAudio('hymn2')" style="display:none;" id="btn-dl-hymn2">⬇ 下载</button><button class="btn-ghost-sm btn-play-preview" onclick="togglePreview('hymn2')" style="display:none;" id="btn-play-hymn2">▶ 试听</button></div></div></div>
         <div class="field-card"><span class="field-label">证道 1</span><div class="field-value"><textarea id="f-sermon1" placeholder="赛66：12-24 赐给存留者的应许" rows="2"></textarea></div></div>
         <div class="field-card"><span class="field-label">证道 2</span><div class="field-value"><textarea id="f-sermon2" placeholder="创3：15 永远的黑暗经济" rows="2"></textarea></div></div>
-        <div class="field-card"><span class="field-label">论坛要点</span><div class="field-value"><textarea id="f-forum" placeholder="论坛分享的主题..." rows="3"></textarea></div></div>
-        <div class="field-card"><span class="field-label">祷告</span><div class="field-value"><textarea id="f-declaration" placeholder="777的祷告..." rows="3"></textarea></div></div>
+        <div class="field-card"><span class="field-label">论坛</span><div class="field-value"><textarea id="f-forum" placeholder="论坛分享的主题..." rows="3"></textarea></div></div>
+        <div class="field-card" style="display:none"><span class="field-label">祷告</span><div class="field-value"><textarea id="f-declaration" placeholder="777的祷告..." rows="3"></textarea></div></div>
         
         <div class="btn-grid" style="margin-top: 8px;">
             <button class="btn btn-primary" onclick="buildSlideshow()">生成幻灯片</button>
@@ -658,7 +658,7 @@ function showVerify() {
         const cls = forum.length > 10 ? 'verify-item' : 'verify-item has-warn';
         if (forum.length <= 10) warnCount++;
         items.push(`<div class="${cls}">
-            <div class="verify-item-header"><span class="verify-icon">${icon}</span><span class="verify-label">论坛要点</span></div>
+            <div class="verify-item-header"><span class="verify-icon">${icon}</span><span class="verify-label">论坛</span></div>
             <div class="verify-value">${esc(forum.substring(0, 80)) + (forum.length > 80 ? '…' : '')}</div>
         </div>`);
     }
@@ -1860,8 +1860,8 @@ function collectSlideData() {
         hymn2Lyrics: document.getElementById('f-hymn2-lyrics').value.trim(),
         sermon1: document.getElementById('f-sermon1').value.trim(),
         sermon2: document.getElementById('f-sermon2').value.trim(),
-        forum: document.getElementById('f-forum').value.trim(),
-        declaration: document.getElementById('f-declaration').value.trim(),
+        forum: (document.getElementById('f-forum').value.trim() + '\n' + document.getElementById('f-declaration').value.trim()).trim(),
+        declaration: '',
     };
 }
 
