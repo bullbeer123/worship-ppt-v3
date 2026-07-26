@@ -283,7 +283,19 @@ Sundayworship 2026.6.7
         <span class="card-title"><span class="icon icon-green">✅</span>确认 / 修改</span>
         <span class="badge badge-green" id="field-count">0 项</span>
     </div>
-    <div id="edit-fields"></div>
+    <div class="field-card"><span class="field-label">日期</span><div class="field-value"><input type="text" id="f-date" placeholder="2026.7.26"></div></div>
+    <div class="field-card"><span class="field-label">上周</span><div class="field-value"><textarea id="f-lastweek" placeholder="上周的默想或回顾内容..." rows="2"></textarea></div></div>
+    <div class="field-card"><span class="field-label">赞美 1</span><div class="field-value"><input type="text" id="f-praise1" placeholder="137 使命"></div></div>
+    <div class="field-card"><span class="field-label">赞美 2</span><div class="field-value"><input type="text" id="f-praise2" placeholder="">  <div id="praise2-badges" class="field-badges"></div></div></div>
+    <div class="field-card"><span class="field-label">特颂</span><div class="field-value"><input type="text" id="f-special" placeholder="没有则留空"></div></div>
+    <div class="field-card"><span class="field-label">诗篇</span><div class="field-value"><input type="text" id="f-psalm" placeholder="138" style="width:80px"></div></div>
+    <div class="field-card"><span class="field-label">新编 1</span><div class="field-value"><input type="text" id="f-hymn1" placeholder="245 今要主自己歌"></div></div>
+    <div class="field-card"><span class="field-label">新编 2</span><div class="field-value"><input type="text" id="f-hymn2" placeholder="293 耶稣住我心歌"></div></div>
+    <div class="field-card"><span class="field-label">证道 1</span><div class="field-value"><textarea id="f-sermon1" placeholder="徒2:17-18 提前看到未来的人们" rows="2"></textarea></div></div>
+    <div class="field-card"><span class="field-label">证道 2</span><div class="field-value"><textarea id="f-sermon2" placeholder="创18:1-33 Ab的蒙恩生活" rows="2"></textarea></div></div>
+    <div class="field-card"><span class="field-label">论坛要点</span><div class="field-value"><textarea id="f-forum" placeholder="论坛分享的主题..." rows="3"></textarea></div></div>
+    <div class="field-card"><span class="field-label">祷告</span><div class="field-value"><textarea id="f-declaration" placeholder="777的祷告..." rows="3"></textarea></div></div>
+    <div id="psalm-content-group" style="display:none"><div class="field-card"><span class="field-label">诗篇内容</span><div class="field-value"><textarea id="f-psalm-content" rows="4"></textarea></div></div></div>
     <div class="btn-grid" style="margin-top:16px">
         <button class="btn btn-primary" onclick="buildSlideshow()">🎬 生成幻灯片</button>
         <button class="btn btn-outline" onclick="document.getElementById('edit-card').style.display='none';document.getElementById('input-card').scrollIntoView({behavior:'smooth'})">← 返回修改</button>
@@ -403,125 +415,279 @@ function getSectionAbbr(name) {
 }
 
 // Render edit fields dynamically
-function renderEditFields() {
-    const fields = [
-        {id:'f-date',label:'日期',type:'text',placeholder:'2026.6.7'},
-        {id:'f-lastweek',label:'上周',type:'textarea',placeholder:'上周的默想或回顾内容...',rows:2},
-        {id:'f-praise1',label:'赞美 1',type:'text',placeholder:'91 二十四小时呼吁'},
-        {id:'f-praise2',label:'赞美 2',type:'text',placeholder:'118 Remnant'},
-        {id:'f-special',label:'特颂',type:'text',placeholder:'没有则留空'},
-        {id:'f-psalm',label:'诗篇',type:'text',placeholder:'23',style:'width:80px'},
-        {id:'f-hymn1',label:'新编 1',type:'text',placeholder:'54 心向主宝座歌'},
-        {id:'f-hymn2',label:'新编 2',type:'text',placeholder:'258 耶稣领我歌'},
-        {id:'f-sermon1',label:'证道 1',type:'textarea',placeholder:'赛66：12-24 赐给存留者的应许',rows:2},
-        {id:'f-sermon2',label:'证道 2',type:'textarea',placeholder:'创3：15 永远的黑暗经济',rows:2},
-        {id:'f-forum',label:'论坛要点',type:'textarea',placeholder:'论坛分享的主题...',rows:3},
-        {id:'f-declaration',label:'祷告',type:'textarea',placeholder:'777的祷告...',rows:3},
-    ];
-    let html = '';
-    fields.forEach(f => {
-        const el = document.getElementById(f.id);
-        const val = el ? el.value : '';
-        if (f.type === 'textarea') {
-            html += '<div class="field-card"><span class="field-label">'+f.label+'</span><div class="field-value"><textarea id="'+f.id+'" placeholder="'+f.placeholder+'" rows="'+f.rows+'">'+esc(val)+'</textarea></div></div>';
-        } else {
-            html += '<div class="field-card"><span class="field-label">'+f.label+'</span><div class="field-value"><input type="text" id="'+f.id+'" placeholder="'+f.placeholder+'" value="'+esc(val)+'"'+(f.style?' style="'+f.style+'"':'')+'></div></div>';
-        }
-    });
-    $('edit-fields').innerHTML = html;
-}
-
-// ============ TEXT PARSING ============
 async function parseText() {
-    const raw = $('paste-area').value.trim();
-    if (!raw) throw new Error('请先粘贴礼拜内容');
-    
-    // Populate hidden fields first, then render
-    // (simplified parser - extracts date, praises, psalms, hymns, sermons)
-    const lines = raw.split('\n');
-    const data = {date:'',lastweek:'',praise1:'',praise2:'',special:'',psalm:'',hymn1:'',hymn2:'',sermon1:'',sermon2:'',forum:'',declaration:''};
-    
-    for (let i=0;i<lines.length;i++) {
-        let line = lines[i].trim();
-        if (!line) continue;
-        
-        // Date
-        if (/Sundayworship/i.test(line) || /礼拜|worship/i.test(line)) {
-            const m = line.match(/(\d{4}[.\-/]\d{1,2}[.\-/]\d{1,2})/);
-            if (m) data.date = m[1];
-            continue;
+    let raw = document.getElementById('paste-area').value;
+    if (!raw.trim()) {
+        showToast('请先粘贴礼拜内容', true);
+        return;
+    }
+
+    // ★ 尝试浏览器内置AI解析（显示加载中提示，让用户知道AI在工作）
+    document.getElementById('loading').classList.add('show');
+    document.getElementById('loading-text').textContent = '🤖 AI智能解析中...';
+    var aiUsed = false;
+    try {
+        var ai = window.ai;
+        if (ai && ai.languageModel) {
+            var caps = await ai.languageModel.capabilities();
+            if (caps.available === 'readily' || caps.available === 'after-download') {
+                var systemMsg = '你是一个礼拜PPT解析助手。请将礼拜文字解析为JSON格式。只输出JSON，不要多余文字，不要markdown包裹。字段: date(日期), lastweek(上周内容合并一行), sermon1(第一讲经文引用+标题), sermon2(第二讲), praise1(第一首赞美), praise2(第二首), psalm(诗篇编号), hymn1(新编赞美1编号), hymn2(新编赞美2编号), forum(论坛内容), declaration(777宣告)。没有就留空字符串。';
+                var session = await ai.languageModel.create({ systemPrompt: systemMsg });
+                var content = await session.prompt('解析这段礼拜文字:\n\n' + raw);
+                session.destroy();
+                if (content) {
+                    var jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+                    var jsonStr = jsonMatch ? jsonMatch[1] : content;
+                    var braceMatch = content.match(/\{[\s\S]*\}/);
+                    var result = JSON.parse(jsonMatch ? jsonStr : (braceMatch ? braceMatch[0] : jsonStr));
+                    if (result.sermon1 || result.praise1) {
+                        fillAIParseResult(result);
+                        document.getElementById('loading').classList.remove('show');
+                        showToast('✅ AI解析完成');
+                        document.getElementById('edit-card').style.display = 'block';
+                        document.getElementById('edit-card').scrollIntoView({ behavior: 'smooth' });
+                        return;
+                        return;
+                    }
+                }
+            }
         }
-        // Last week
-        if (/上周/i.test(line)) {
-            data.lastweek = line.replace(/上周[：:]?\s*/,'').trim() || lines[i+1]?.trim()||'';
-            continue;
-        }
-        // Praise
-        if (/赞美[：:]?\s*(\d+)/i.test(line) && !/新编/i.test(line)) {
-            const m = line.match(/赞美[：:]?\s*(\d+)/i);
-            const num = m[1];
-            if (!data.praise1) { data.praise1 = parsePraiseTitle(line, num); }
-            else if (!data.praise2) { data.praise2 = parsePraiseTitle(line, num); }
-            else data.special = parsePraiseTitle(line, num);
-            continue;
-        }
-        // Special
-        if (/特颂|特别赞美/i.test(line)) {
-            data.special = line.replace(/特颂[：:]?|特别赞美[：:]?\s*/gi,'').trim();
-            continue;
-        }
-        // Psalm
-        if (/诗篇|诵读经文/i.test(line)) {
-            const m = line.match(/(\d+)\s*篇/);
-            if (m) data.psalm = m[1];
-            else data.psalm = line.replace(/诗篇[：:]?|诵读经文[：:]?\s*/gi,'').trim();
-            continue;
-        }
-        // New hymn
-        if (/新编\s*赞美?[：:]?\s*(\d+)/i.test(line)) {
-            const m = line.match(/新编\s*赞美?[：:]?\s*(\d+)/i);
-            const num = m[1];
-            if (!data.hymn1) data.hymn1 = parsePraiseTitle(line, num);
-            else data.hymn2 = parsePraiseTitle(line, num);
-            continue;
-        }
-        // Sermon
-        if (/赛|创|出|利|民|申|书|士|得|撒|王|代|拉|尼|斯|伯|诗|箴|传|歌|耶|哀|结|但|何|珥|摩|俄|拿|弥|鸿|哈|番|该|亚|玛|太|可|路|约|徒|罗|林|加|弗|腓|西|帖|提|多|门|来|雅|彼|约|犹|启/.test(line) && /\d+[：:]\d+/.test(line)) {
-            if (!data.sermon1) data.sermon1 = line;
-            else if (!data.sermon2) data.sermon2 = line;
-            continue;
-        }
-        // Forum
-        if (/论坛|分享/i.test(line)) {
-            data.forum = line.replace(/论坛[：:]?|分享[：:]?\s*/gi,'').trim() || lines[i+1]?.trim()||'';
-            continue;
-        }
-        // Declaration / prayer
-        if (/777|宣告|祷告/i.test(line)) {
-            data.declaration = line.replace(/777[：:]?|宣告[：:]?|祷告[：:]?\s*/gi,'').trim() || lines[i+1]?.trim()||'';
-            continue;
+    } catch (e) { /* AI失败→静默走正则 */ }
+
+    // AI不可用或失败 → 转正则解析
+    document.getElementById('loading-text').textContent = '📝 正则解析中...';
+
+    // 正则解析（AI不可用或返回结果不对时自动降级）
+    // 0. 微信连续文本预处理
+    //    微信提取的文字常把所有内容压成一行（换行丢失）
+    //    在关键字前插入换行，让后续正则正常工作
+    //    注意：必须先匹配"新编赞美"（4字）再匹配"赞美"（2字），否则会截断
+    //    "赞美"的lookbehind必须排除"新编"前缀，否则"新编赞美"会被拆成两行
+    const kwLine = raw.replace(/\n/g, ' '); // 合并为一行检测
+    const sectionKws = ['赞美', '诗篇', '新编赞美', '论坛', '题目'];
+    const kwCount = sectionKws.filter(kw => kwLine.includes(kw)).length;
+    const actualLines = raw.split('\n').filter(l => l.trim()).length;
+    // 关键字≥2个 且 实际行数≤关键字数+5（降低阈值，微信OCR行数少）
+    if (kwCount >= 2 && actualLines <= kwCount + 5) {
+        raw = raw
+            .replace(/(?<!\n)(?=新编赞美)/g, '\n')
+            .replace(/(?<!\n)(?<!新编)(?=赞美)/g, '\n')
+            .replace(/(?<!\n)(?=诗篇)/g, '\n')
+            .replace(/(?<!\n)(?=论坛)/g, '\n')
+            .replace(/(?<!\n)(?=题目)/g, '\n')
+            .replace(/(?<!\n)(?=上周)/g, '\n')
+            .replace(/(?<!\n)(?=777的)/g, '\n');
+        console.log('微信连续文本已预处理分段');
+    }
+
+
+    // 1. Date: "Sunday worship 2026.4.12" or "2026.4.12"
+    let date = '';
+    const dateMatch = raw.match(/(\d{4})\s*[./]\s*(\d{1,2})\s*[./]\s*(\d{1,2})/);
+    if (dateMatch) date = dateMatch[1] + '.' + dateMatch[2] + '.' + dateMatch[3];
+    document.getElementById('f-date').value = date;
+
+    // 1.5 上周内容: "上周:xxxx" — 终止于下一节关键字（圣经书卷+数字/赞美/诗篇/论坛等）
+    //    注意：圣经书卷名后必须跟数字（如"拿1:1"），避免"拿着"中的"拿"误触发
+    const lastweekAll = raw.match(/上周\s*[：:]\s*([\s\S]*?)(?=创\d|出\d|利\d|民\d|申\d|书\d|士\d|得\d|撒上\d|撒下\d|王上\d|王下\d|代上\d|代下\d|拉\d|尼\d|斯\d|伯\d|箴\d|传\d|歌\d|赛\d|耶\d|哀\d|结\d|但\d|何\d|珥\d|摩\d|俄\d|拿\d|弥\d|鸿\d|哈\d|番\d|该\d|亚\d|玛\d|太\d|可\d|路\d|约\d|徒\d|罗\d|林前\d|林后\d|加\d|弗\d|腓\d|西\d|帖前\d|帖后\d|提前\d|提后\d|多\d|门\d|来\d|雅\d|彼前\d|彼后\d|约一\d|约贰\d|约叁\d|犹\d|启\d|赞美|诗篇|新编|论坛|题目)/m);
+    if (lastweekAll) {
+        const text = lastweekAll[1].replace(/\s+/g, '').replace(/[（(]/g, '（').replace(/[）)]/g, '）').replace(/[:：]/g, '：');
+        document.getElementById('f-lastweek').value = text;
+    }
+
+    // 2. Sermons (证道): 从上周之后找圣经引用作为证道起点
+    let title1 = '', title2 = '';
+    const booksAll = '创|出|利|民|申|书|士|得|撒上|撒下|王上|王下|代上|代下|拉|尼|斯|伯|诗|箴|传|歌|赛|耶|哀|结|但|何|珥|摩|俄|拿|弥|鸿|哈|番|该|亚|玛|太|可|路|约|徒|罗|林前|林后|加|弗|腓|西|帖前|帖后|提前|提后|多|门|来|雅|彼前|彼后|约一|约贰|约叁|犹|启';
+    const sectionRx = /(赞美|诗篇|新编赞美|论坛)/;
+
+    // 获取"讲题区域"：从第一个圣经引用开始，到赞美/诗篇/论坛结束
+    let sermonZone = '';
+    const firstRefIdx = raw.search(new RegExp('(' + booksAll + ')\\d'));
+    if (firstRefIdx >= 0) {
+        const afterRef = raw.substring(firstRefIdx);
+        const endMatch = afterRef.match(sectionRx);
+        sermonZone = endMatch ? afterRef.substring(0, endMatch.index) : afterRef;
+    } else {
+        // 没有圣经引用 → 尝试取"上周"之后到赞美/诗篇之间的文本
+        const lwIdx = raw.indexOf('上周');
+        if (lwIdx >= 0) {
+            const afterLW = raw.substring(lwIdx + 2);
+            const endMatch = afterLW.match(sectionRx);
+            sermonZone = endMatch ? afterLW.substring(0, endMatch.index) : afterLW;
         }
     }
-    
-    // Populate hidden form fields
-    for (const [k,v] of Object.entries(data)) {
-        const el = $('f-'+k);
-        if (el) el.value = v||'';
+
+    // 在讲题区域中找圣经引用
+    if (sermonZone) {
+        const refRx = new RegExp('(' + booksAll + ')\\d', 'g');
+        let match;
+        const sermonStarts = [];
+        while ((match = refRx.exec(sermonZone)) !== null) {
+            const before = sermonZone.substring(Math.max(0, match.index - 20), match.index);
+            if (sectionRx.test(before)) break;
+            sermonStarts.push(match.index);
+        }
+        if (sermonStarts.length >= 2) {
+            title1 = sermonZone.substring(sermonStarts[0], sermonStarts[1]).trim();
+            title2 = sermonZone.substring(sermonStarts[1]).trim();
+        } else if (sermonStarts.length === 1) {
+            title1 = sermonZone.substring(sermonStarts[0]).trim();
+        }
     }
-    
-    // Show edit card
-    $('edit-card').style.display = 'block';
-    renderEditFields();
-    $('field-count').textContent = Object.values(data).filter(v=>v).length + ' 项';
-    $('edit-card').scrollIntoView({behavior:'smooth',block:'start'});
+    document.getElementById('f-sermon1').value = mergeSermonTitle(title1);
+    document.getElementById('f-sermon2').value = mergeSermonTitle(title2);
+
+    // 3. Praise songs: "赞美111要深深思想耶稣，134拥有望楼的守望者"
+    //    兼容有/无换行：在"赞美"和"诗篇"/"新编赞美"/"论坛"之间取内容
+    let praiseEnd = raw.match(/赞美[\s\S]*?(?=诗篇|新编赞美|论坛)/);
+    if (!praiseEnd) {
+        // 回退：取"赞美"到下一个段落换行
+        praiseEnd = raw.match(/赞美[^\n]*/);
+    }
+    if (praiseEnd) {
+        const praiseContent = praiseEnd[0].replace(/^赞美\s*[：:，,]?\s*/, '');
+        // 分割策略：逗号 > 空格+数字边界 > 智能数字边界（避免歌名内数字误判）
+        let songs = praiseContent.replace(/[，,、]/g, '\x00').split('\x00').map(s => s.trim()).filter(Boolean);
+        if (songs.length === 1 && songs[0]) {
+            // 尝试按"空格+2位以上数字"分割（如"91歌名 118歌名"）
+            const text = songs[0];
+            const spaceParts = text.split(/\s+(?=\d{2,3})/);
+            if (spaceParts.length >= 2) {
+                songs = spaceParts.map(s => s.replace(/\s+/g, ''));
+            } else {
+                // 最后兜底：数字边界，但排除常见连接词前的数字（避免"是237"误判为新歌）
+                const excludeChars = '是的有在和为了的与到对给从以把会就能还不都也';
+                const noSpace = text.replace(/\s+/g, '');
+                const re = new RegExp('([^' + excludeChars + '\\d])(\\d{2,3}(?=[^\\d]|$))', 'g');
+                const split2 = noSpace.replace(re, '$1\x00$2');
+                const parts2 = split2.split('\x00').filter(Boolean);
+                if (parts2.length >= 2) songs = parts2;
+            }
+        }
+        document.getElementById('f-praise1').value = (songs[0] || '').trim();
+        document.getElementById('f-praise2').value = (songs[1] || '').trim();
+    }
+
+    // 4. Psalm number: "诗篇:23篇" / "诗篇:23" / "诗篇23篇" / "诗篇 145篇"（无冒号也兼容）
+    const psalmMatch = raw.match(/诗篇\s*[：:，,]?\s*(\d+)/);
+    if (psalmMatch) document.getElementById('f-psalm').value = psalmMatch[1].trim();
+
+    // 5. Hymn numbers: "新编赞美41颂赞主圣名歌，327坚固保障歌"
+    //    在"新编赞美"和"论坛"/"777"之间取内容
+    //    优先按边界匹配，若匹配不到则取"新编赞美"到行末/段落末
+    let hymnEnd = raw.match(/新编赞美[\s\S]*?(?=论坛|777[的])/);
+    if (!hymnEnd) {
+        // 回退：取"新编赞美"到下一个段落换行
+        hymnEnd = raw.match(/新编赞美[^\n]*/);
+    }
+    if (hymnEnd) {
+        const hymnContent = hymnEnd[0].replace(/^新编赞美\s*[：:，,]?\s*/, '');
+        const hymnText = hymnContent.replace(/\s+/g, '').replace(/[，,、]/g, '\x00');
+        let nums = hymnText.split('\x00').filter(Boolean);
+        if (nums.length === 1 && nums[0]) {
+            // 无逗号时按"[非数字后跟2-3位数字]"切割
+            const split2 = nums[0].replace(/([^\d])(\d{2,3})/g, '$1\x00$2');
+            const parts2 = split2.split('\x00').filter(Boolean);
+            if (parts2.length >= 2) nums = parts2;
+        }
+        document.getElementById('f-hymn1').value = (nums[0] || '').trim();
+        document.getElementById('f-hymn2').value = (nums[1] || '').trim();
+    }
+
+    // 6. Forum + Prayer/Declaration:
+    //    论坛要点/论坛(提问)后 → 到"祷告"/"宣告"边界 = 论坛内容
+    //    "祷告"/"宣告"之后 = 祷告/宣告内容
+    //    无"祷告"/"宣告"边界时，回退到777关键字分割逻辑
+    let forumText = '';
+    let declText = '';
+    const forumMatch = raw.match(/论坛\s*(?:[（(]提问[）)])?\s*(?:要点)?\s*[：:\s]?\s*([\s\S]*?)$/);
+    if (forumMatch) {
+        let afterForum = forumMatch[1].trim();
+        // 去掉开头残留的"要点"标签后缀（如"论坛要点"匹配后残留"要点"）
+        afterForum = afterForum.replace(/^要点\s*[：:，,]?\s*/, '').trim();
+
+        // 优先查找"祷告"或"宣告"边界，在边界处切分论坛/祷告
+        const prayIdx = afterForum.search(/\b(?:祷告|宣告)\b/);
+        if (prayIdx > 0) {
+            forumText = afterForum.substring(0, prayIdx).trim();
+            declText = afterForum.substring(prayIdx).replace(/^(?:祷告|宣告)\s*[：:，,]?\s*/, '').trim();
+        } else if (prayIdx === 0) {
+            // "祷告"/"宣告"在开头，没有论坛内容
+            forumText = '';
+            declText = afterForum.replace(/^(?:祷告|宣告)\s*[：:，,]?\s*/, '').trim();
+        } else {
+            // 没有祷告/宣告边界 → 回退到777关键字分割逻辑
+            const fParts = afterForum.split(/\n/).map(l => l.trim()).filter(Boolean);
+            if (fParts.length >= 2) {
+                const declKeywords = /建立神国|准备300|形成3Camp|医治伟人|宝座的望楼|300%|\.3camp|里程碑|伟大事工|绝对望楼|绝对旅程|绝对里程碑/i;
+                var declLineIdx = -1;
+                for (var fi = 0; fi < fParts.length; fi++) {
+                    if (declKeywords.test(fParts[fi])) { declLineIdx = fi; break; }
+                }
+                if (declLineIdx > 0) {
+                    forumText = fParts.slice(0, declLineIdx).join('\n');
+                    declText = fParts.slice(declLineIdx).join('\n');
+                } else {
+                    // 找不到777关键字：第一段 = 论坛，剩余 = 祷告
+                    forumText = fParts[0];
+                    declText = fParts.slice(1).join('\n');
+                }
+            } else if (fParts.length === 1) {
+                const line = fParts[0];
+                const dotIdx = line.indexOf('。');
+                if (dotIdx > 0) {
+                    forumText = line.substring(0, dotIdx + 1).trim();
+                    declText = line.substring(dotIdx + 1).trim();
+                } else if (line.length > 80) {
+                    const declSplit = line.search(/宝座的望楼|300%|里程碑|\.3camp|医治伟人/i);
+                    if (declSplit > 0) {
+                        forumText = line.substring(0, declSplit).trim();
+                        declText = line.substring(declSplit).trim();
+                    } else {
+                        forumText = line;
+                    }
+                } else {
+                    forumText = line;
+                }
+            }
+        }
+    }
+
+    // 如果论坛文本中还包含777前缀格式的内容，提取出来
+    if (forumText && /777的/.test(forumText)) {
+        const declLines = forumText.match(/^.*777的[^\n]*/gm);
+        if (declLines) {
+            if (declText) declText = declLines.join('\n') + '\n' + declText;
+            else declText = declLines.join('\n');
+            forumText = forumText.replace(/^.*777的[^\n]*/gm, '').trim();
+        }
+    }
+
+    document.getElementById('f-forum').value = forumText;
+    if (declText) document.getElementById('f-declaration').value = declText;
+    // 触发777快捷按钮显示
+    parse777AndShowButtons(document.getElementById('f-declaration').value);
+
+    // Show edit section
+    document.getElementById('loading').classList.remove('show');
+    document.getElementById('edit-card').style.display = 'block';
+    document.getElementById('edit-card').scrollIntoView({ behavior: 'smooth' });
+    showToast('✅ 解析完成（正则）');
+
+    // 8. 纯数字的赞美/新编字段自动补全为"编号 歌名"
+    await autoCompletePureNumbers();
+    checkPraiseNames();
 }
 
-function parsePraiseTitle(line, num) {
-    const rest = line.replace(new RegExp('.*?'+num+'\\s*'),'').trim();
-    return num + (rest ? ' ' + rest : '');
+function mergeSermonTitle(val) {
+    const lines = val.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length >= 2 && !lines[0].includes('【') && !lines[1].includes('【')) {
+        // 前两行都不是经文内容标记（【），说明第二行是讲题 → 合并
+        return lines[0] + '　' + lines.slice(1).join('\n');
+    }
+    return val;
 }
 
-// ============ DATA COLLECTION ============
 function collectSlideData() {
     return {
         date: $('f-date').value.trim(),
@@ -681,8 +847,7 @@ async function matchAll() {
         if(audioFail>0)msg+=', '+audioFail+'首未找到';
         showPhotoLoading(false);
         showToast(msg);
-        renderEditFields();
-        $('edit-card').style.display = 'block';
+                $('edit-card').style.display = 'block';
         $('edit-card').scrollIntoView({behavior:'smooth',block:'start'});
         saveHistory();
     } catch(err) {
@@ -1032,8 +1197,7 @@ function restoreLastRecord() {
             for(const[k,v]of Object.entries(record.data)){const el=$('f-'+k);if(el)el.value=v||''}
         }
         if(record.customSlides) {customSlides=record.customSlides;nextElId=record.nextElId||1}
-        renderEditFields();
-        $('edit-card').style.display = 'block';
+                $('edit-card').style.display = 'block';
         $('edit-card').scrollIntoView({behavior:'smooth'});
         showToast('已恢复上次记录');
     } catch(e) { showToast('恢复失败',true); }
@@ -1080,8 +1244,7 @@ function restoreHistory(ts) {
         $('paste-area').value = h.raw||'';
         Object.entries(h.fields||{}).forEach(([id,val])=>{const el=$(id);if(el)el.value=val||''});
         $('edit-card').style.display = 'block';
-        renderEditFields();
-        _lastAutoParsedRaw = (h.raw||'').trim();
+                _lastAutoParsedRaw = (h.raw||'').trim();
         showToast('已恢复历史记录');
         $('edit-card').scrollIntoView({behavior:'smooth',block:'start'});
     } catch(e) { console.error(e); }
@@ -1122,8 +1285,7 @@ async function matchAllAuto() {
         }));
         _lastAutoParsedRaw = raw;
         saveHistory();
-        renderEditFields();
-        $('edit-card').style.display = 'block';
+                $('edit-card').style.display = 'block';
         if(hint) hint.textContent = '已自动解析 · 可点「生成幻灯片」或下方按钮核对';
     } catch(e) {
         console.error(e);
@@ -1162,6 +1324,25 @@ function resetAll() {
     $('parse-hint').textContent = '按「帮我做」自动完成解析、搜索歌词音频、生成幻灯片';
     window.scrollTo({top:0,behavior:'smooth'});
 }
+
+// ============ PARSE HELPERS (from V2) ============
+function fillAIParseResult(result) {
+    if (result.date) $('f-date').value = result.date;
+    if (result.lastweek) $('f-lastweek').value = result.lastweek;
+    if (result.sermon1) $('f-sermon1').value = mergeSermonTitle(result.sermon1);
+    if (result.sermon2) $('f-sermon2').value = mergeSermonTitle(result.sermon2);
+    if (result.praise1) $('f-praise1').value = result.praise1;
+    if (result.praise2) $('f-praise2').value = result.praise2;
+    if (result.psalm) $('f-psalm').value = result.psalm;
+    if (result.hymn1) $('f-hymn1').value = result.hymn1;
+    if (result.hymn2) $('f-hymn2').value = result.hymn2;
+    if (result.forum) $('f-forum').value = result.forum;
+    if (result.declaration) $('f-declaration').value = result.declaration;
+    $('edit-card').style.display = 'block';
+}
+async function autoCompletePureNumbers() { /* song autocomplete not ported yet */ }
+function checkPraiseNames() { /* stub */ }
+function parse777AndShowButtons(text) { /* stub */ }
 
 // ============ STUBS ============
 function openPhotoCapture(){showToast('拍照识别功能开发中')}
