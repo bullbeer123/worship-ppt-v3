@@ -188,7 +188,7 @@ html.elder-mode .side-btn{font-size:14px;padding:12px}
     <!-- Header -->
     <div class="header">
         <h1>主日礼拜PPT生成器</h1>
-        <p>粘贴内容，一键生成幻灯片 <span class="eldermode-toggle" id="eldermode-link" onclick="toggleElderMode()">👴 老年版</span></p>
+        <p>粘贴内容，一键生成幻灯片 <span class="eldermode-toggle" id="eldermode-link" onclick="toggleElderMode()">👴 老年版</span> · <span class="eldermode-toggle" onclick="downloadOffline()">⬇ 下载离线版</span></p>
     </div>
 
     <!-- Screen 1: Input -->
@@ -1581,6 +1581,32 @@ async function fetchBible(type) {
 // ============ Lyric & Audio Search (发光如星) =
 const SONG_API = 'https://api.top237.top/ry-api';
 let welcomeChoice = '24'; // 欢迎赞美选择: 24 或 128
+// 下载离线版：网站与本地二合一，双击本地打开音频播放无CORS限制
+async function downloadOffline() {
+    try {
+        showToast('正在打包离线版...');
+        let html;
+        try {
+            // 线上：直接获取当前页面原始文件
+            const resp = await fetch(window.location.href.split('#')[0] + '?offline=1', { cache: 'no-cache' });
+            html = await resp.text();
+        } catch (e) {
+            // 本地/失败兜底：序列化当前 DOM
+            html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+        }
+        // 移除 sw 注册（本地 file:// 无法使用，避免报错）
+        html = html.replace(/navigator\.serviceWorker[^\n]*\n?/g, '');
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = '礼拜PPT生成器-离线版.html';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+        showToast('已下载离线版，可双击本地打开');
+    } catch (e) {
+        showToast('下载失败: ' + e.message, true);
+    }
+}
 // 欢迎赞美二选一切换
 function onWelcomeChoice(num) {
     welcomeChoice = String(num);
