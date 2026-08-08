@@ -1182,7 +1182,7 @@ async function parseText() {
 
     // 1.5 上周内容: "上周:xxxx" — 终止于下一节关键字（圣经书卷+数字/赞美/诗篇/论坛等）
     //    注意：圣经书卷名后必须跟数字（如"拿1:1"），避免"拿着"中的"拿"误触发
-    const lastweekAll = raw.match(/上周\s*[：:]\s*([\s\S]*?)(?=创\d|出\d|利\d|民\d|申\d|书\d|士\d|得\d|撒上\d|撒下\d|王上\d|王下\d|代上\d|代下\d|拉\d|尼\d|斯\d|伯\d|箴\d|传\d|歌\d|赛\d|耶\d|哀\d|结\d|但\d|何\d|珥\d|摩\d|俄\d|拿\d|弥\d|鸿\d|哈\d|番\d|该\d|亚\d|玛\d|太\d|可\d|路\d|约\d|徒\d|罗\d|林前\d|林后\d|加\d|弗\d|腓\d|西\d|帖前\d|帖后\d|提前\d|提后\d|多\d|门\d|来\d|雅\d|彼前\d|彼后\d|约一\d|约贰\d|约叁\d|犹\d|启\d|赞美|诗篇|新编|论坛|题目)/m);
+    const lastweekAll = raw.match(/上周\s*[：:]\s*([\s\S]*?)(?=本周|创\d|出\d|利\d|民\d|申\d|书\d|士\d|得\d|撒上\d|撒下\d|王上\d|王下\d|代上\d|代下\d|拉\d|尼\d|斯\d|伯\d|箴\d|传\d|歌\d|赛\d|耶\d|哀\d|结\d|但\d|何\d|珥\d|摩\d|俄\d|拿\d|弥\d|鸿\d|哈\d|番\d|该\d|亚\d|玛\d|太\d|可\d|路\d|约\d|徒\d|罗\d|林前\d|林后\d|加\d|弗\d|腓\d|西\d|帖前\d|帖后\d|提前\d|提后\d|多\d|门\d|来\d|雅\d|彼前\d|彼后\d|约一\d|约贰\d|约叁\d|犹\d|启\d|赞美|诗篇|新编|论坛|题目)/m);
     if (lastweekAll) {
         const text = lastweekAll[1].replace(/\s+/g, '').replace(/[（(]/g, '（').replace(/[）)]/g, '）').replace(/[:：]/g, '：');
         document.getElementById('f-lastweek').value = text;
@@ -1356,6 +1356,10 @@ async function parseText() {
         }
     }
 
+    // 合并论坛 + 祷告/宣告：完整内容进 f-forum（编辑区"论坛"显示全部），f-declaration 保留供封面footer显示
+    if (declText) {
+        forumText = (forumText ? forumText + '\n' : '') + declText;
+    }
     document.getElementById('f-forum').value = forumText;
     if (declText) document.getElementById('f-declaration').value = declText;
     // 触发777快捷按钮显示
