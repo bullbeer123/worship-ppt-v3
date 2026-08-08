@@ -197,6 +197,11 @@ html.elder-mode .side-btn{font-size:14px;padding:12px}
             <span class="section-title">礼拜内容</span>
             <span class="ai-badge ai-badge-off" id="ai-badge">检测AI中</span>
         </div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-secondary);flex-wrap:wrap;">
+            <span>🎼 欢迎赞美：</span>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="welcome-choice" value="24" checked onchange="onWelcomeChoice('24')"> 24 你原来是宝贵的</label>
+            <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="radio" name="welcome-choice" value="128" onchange="onWelcomeChoice('128')"> 128 祝福的源泉</label>
+        </div>
         <textarea class="paste-area" id="paste-area" placeholder="把手机备忘录里的文字直接粘贴到这里...&#10;&#10;格式示例：&#10;Sundayworship2026.6.7&#10;上周：...&#10;赛66：12-24赐给存留者的应许&#10;赞美：91二十四小时呼吁&#10;诗篇：23篇&#10;新编赞美：54心向主宝座歌&#10;论坛：..." oninput="onPasteInput()"></textarea>
         <input type="file" id="photo-input" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoUpload(this)">
         <div class="btn-grid">
@@ -229,8 +234,8 @@ html.elder-mode .side-btn{font-size:14px;padding:12px}
         <div class="field-card"><span class="field-label">诗篇</span><div class="field-value"><input type="text" id="f-psalm" placeholder="23" style="width:80px;"><div class="field-badges" id="psalm-badges"></div></div></div>
         <div class="field-card"><span class="field-label">新编 1</span><div class="field-value"><input type="text" id="f-hymn1" placeholder="54 心向主宝座歌"><textarea id="f-hymn1-lyrics" placeholder="歌词自动匹配，也可粘贴替换" rows="3" style="display:none;margin-top:6px;"></textarea><div class="field-badges" id="hymn1-badges"></div><div class="field-actions" style="margin-top:4px;display:flex;gap:4px;justify-content:flex-end;"><button class="btn-ghost-sm" onclick="fetchLyrics('hymn1')" style="display:none;" id="btn-fetch-hymn1">搜歌词</button><button class="btn-ghost-sm" onclick="pickAudio('hymn1')" style="display:none;" id="btn-audio-hymn1">🎵 本地音频</button><button class="btn-ghost-sm" onclick="downloadAudio('hymn1')" style="display:none;" id="btn-dl-hymn1">⬇ 下载</button><button class="btn-ghost-sm btn-play-preview" onclick="togglePreview('hymn1')" style="display:none;" id="btn-play-hymn1">▶ 试听</button></div></div></div>
         <div class="field-card"><span class="field-label">新编 2</span><div class="field-value"><input type="text" id="f-hymn2" placeholder="258 耶稣领我歌"><textarea id="f-hymn2-lyrics" placeholder="歌词自动匹配，也可粘贴替换" rows="3" style="display:none;margin-top:6px;"></textarea><div class="field-badges" id="hymn2-badges"></div><div class="field-actions" style="margin-top:4px;display:flex;gap:4px;justify-content:flex-end;"><button class="btn-ghost-sm" onclick="fetchLyrics('hymn2')" style="display:none;" id="btn-fetch-hymn2">搜歌词</button><button class="btn-ghost-sm" onclick="pickAudio('hymn2')" style="display:none;" id="btn-audio-hymn2">🎵 本地音频</button><button class="btn-ghost-sm" onclick="downloadAudio('hymn2')" style="display:none;" id="btn-dl-hymn2">⬇ 下载</button><button class="btn-ghost-sm btn-play-preview" onclick="togglePreview('hymn2')" style="display:none;" id="btn-play-hymn2">▶ 试听</button></div></div></div>
-        <div class="field-card"><span class="field-label">证道 1</span><div class="field-value"><textarea id="f-sermon1" placeholder="赛66：12-24 赐给存留者的应许" rows="2"></textarea></div></div>
-        <div class="field-card"><span class="field-label">证道 2</span><div class="field-value"><textarea id="f-sermon2" placeholder="创3：15 永远的黑暗经济" rows="2"></textarea></div></div>
+        <div class="field-card"><span class="field-label">第一讲</span><div class="field-value"><textarea id="f-sermon1" placeholder="赛66：12-24 赐给存留者的应许" rows="2"></textarea></div></div>
+        <div class="field-card"><span class="field-label">第二讲</span><div class="field-value"><textarea id="f-sermon2" placeholder="创3：15 永远的黑暗经济" rows="2"></textarea></div></div>
         <div class="field-card"><span class="field-label">论坛</span><div class="field-value"><textarea id="f-forum" placeholder="论坛分享的主题..." rows="3"></textarea></div></div>
         <div class="field-card" style="display:none"><span class="field-label">祷告</span><div class="field-value"><textarea id="f-declaration" placeholder="777的祷告..." rows="3"></textarea></div></div>
         
@@ -694,7 +699,7 @@ function showVerify() {
     for (const s of ['sermon1', 'sermon2']) {
         const val = document.getElementById('f-' + s).value.trim();
         if (!val) continue;
-        const label = s === 'sermon1' ? '证道 1' : '证道 2';
+        const label = s === 'sermon1' ? '第一讲' : '第二讲';
         items.push(`<div class="verify-item">
             <div class="verify-item-header"><span class="verify-icon">📖</span><span class="verify-label">${label}: ${val}</span></div>
         </div>`);
@@ -830,12 +835,28 @@ const FIXED = {
     standVerseMeditation: '向神献上感谢的祷告',
     welcome: '24',
     welcomeName: '你原来是宝贵的',
+    welcomeId: '5b00f970605d87b30340f3b2487b0387',
     welcomeLyrics: [
         '你原来是宝贵的\n你原来是尊贵的\n在这世上 你就是独一的\n在我心里 也是无比贵重的',
         '我是如此爱 这样的你\n我愿祝福 这样的你\n你是值得被神爱的人\n我要奉主的名来祝福你',
         '你原来是宝贵的\n你原来是尊贵的\n在这世上 你就是独一的\n在我心里 也是无比贵重的',
         '我是如此爱 这样的你\n我愿祝福 这样的你\n你是值得被神爱的人\n我要奉主的名来祝福你',
     ],
+    // 欢迎赞美二选一：24 你原来是宝贵的 / 128 祝福的源泉
+    welcomeSongs: {
+        '24': { id: '5b00f970605d87b30340f3b2487b0387', name: '你原来是宝贵的', lyrics: [
+            '你原来是宝贵的\n你原来是尊贵的\n在这世上 你就是独一的\n在我心里 也是无比贵重的',
+            '我是如此爱 这样的你\n我愿祝福 这样的你\n你是值得被神爱的人\n我要奉主的名来祝福你',
+            '你原来是宝贵的\n你原来是尊贵的\n在这世上 你就是独一的\n在我心里 也是无比贵重的',
+            '我是如此爱 这样的你\n我愿祝福 这样的你\n你是值得被神爱的人\n我要奉主的名来祝福你',
+        ]},
+        '128': { id: '5b00f970605d87b30340f53b5390fddd', name: '祝福的源泉', lyrics: [
+            '你是拥有神应许\n拥有神应许的祝福的源泉\n万国万民必定通过你\n蒙受创造主的祝福',
+            '你是拥有神应许\n拥有应许被神拣选的门徒\n万国万民必定通过你\n成为全能主的门徒',
+            '你是拥有神应许\n拥有神应许的祝福的源泉\n万国万民必定通过你\n蒙受创造主的祝福',
+            '你是拥有神应许\n拥有应许被神拣选的门徒\n万国万民必定通过你\n成为全能主的门徒',
+        ]},
+    },
     finalHymn: '134',
     finalHymnName: '主啊，在我人生中',
     finalHymnLyrics: [
@@ -887,7 +908,7 @@ async function oneClickGenerate() {
                 if(t.kind==='sermon')return fetchSermonSilent(t.type);
             }));
         }
-        loadFixedSongAudioById('praise-welcome','5b00f970605d87b30340f3b2487b0387','你原来是宝贵的');
+        loadFixedSongAudioById('praise-welcome', FIXED.welcomeSongs[welcomeChoice].id, FIXED.welcomeSongs[welcomeChoice].name);
         loadFixedSongAudioById('praise-final','5b00f970605d87b30340f5467f65e853','主啊，在我人生中');
         saveHistory();
         showPhotoLoading(true, '生成验证...');
@@ -944,7 +965,7 @@ async function parseFromSidePanel(isAuto = false) {
         let msg='一键匹配完成';
         if(parts.length>0)msg+='：'+parts.join('、')+'已获取';
         if(fp.length>0)msg+='，'+fp.join('、')+'未找到';
-        loadFixedSongAudioById('praise-welcome','5b00f970605d87b30340f3b2487b0387','你原来是宝贵的');
+        loadFixedSongAudioById('praise-welcome', FIXED.welcomeSongs[welcomeChoice].id, FIXED.welcomeSongs[welcomeChoice].name);
         loadFixedSongAudioById('praise-final','5b00f970605d87b30340f5467f65e853','主啊，在我人生中');
         saveHistory();
         if (isAuto) {
@@ -1140,7 +1161,7 @@ async function fetchSermonSilent(type) {
         const allLines = val.split('\n').map(l => l.trim()).filter(Boolean);
         const titleBlock = mergeSermonTitle(allLines.join('\n'));
         document.getElementById(fieldId).value = titleBlock + '\n\n' + results.join('\n\n');
-        return { success: '证道' + (type === 'sermon1' ? '一' : '二') };
+        return { success: '第' + (type === 'sermon1' ? '一' : '二') + '讲' };
     } catch (err) {
         return { error: err.message };
     }
@@ -1513,7 +1534,7 @@ async function fetchBible(type) {
         } else {
             const fieldId = type === 'sermon1' ? 'f-sermon1' : 'f-sermon2';
             const val = document.getElementById(fieldId).value.trim();
-            if (!val) { showToast('请先输入证道经文引用', true); return; }
+            if (!val) { showToast('请先输入经文引用', true); return; }
             const firstLine = val.split('\n')[0];
 
             const books = '撒上|撒下|创|出|利|民|申|书|士|得|王上|王下|代上|代下|拉|尼|斯|伯|诗|箴|传|歌|赛|耶|哀|结|但|何|珥|摩|俄|拿|弥|鸿|哈|番|该|亚|玛|太|可|路|约|徒|罗|林前|林后|加|弗|腓|西|帖前|帖后|提前|提后|多|门|来|雅|彼前|彼后|约一|约贰|约叁|犹|启';
@@ -1564,6 +1585,13 @@ async function fetchBible(type) {
 
 // ============ Lyric & Audio Search (发光如星) =
 const SONG_API = 'https://api.top237.top/ry-api';
+let welcomeChoice = '24'; // 欢迎赞美选择: 24 或 128
+// 欢迎赞美二选一切换
+function onWelcomeChoice(num) {
+    welcomeChoice = String(num);
+    try { localStorage.setItem('wpg_welcome_choice', welcomeChoice); } catch (e) {}
+    showToast('欢迎赞美已设为 ' + welcomeChoice + ' ' + FIXED.welcomeSongs[welcomeChoice].name);
+}
 let songCache = null; // Cache for full song list (1160 songs)
 
 // ---- 歌曲音频URL持久化字典 (localStorage) ----
@@ -2015,7 +2043,7 @@ function buildSlides(data) {
     insertCP('开篇');
 
     // 2. 献上赞美 — each song: title slide + lyrics pages
-    [['praise1', 'praise1Lyrics', '献上赞美'], ['praise2', 'praise2Lyrics', '献上赞美']].forEach(([nameKey, lyricsKey, label]) => {
+    [['praise1', 'praise1Lyrics', '赞美1'], ['praise2', 'praise2Lyrics', '赞美2']].forEach(([nameKey, lyricsKey, label]) => {
         const name = data[nameKey];
         const lyrics = data[lyricsKey];
         if (!name) return;
@@ -2101,7 +2129,7 @@ function buildSlides(data) {
     // 9. 牧师证道 — each sermon: title + verses split into pages (up to 2 sentences)
     [data.sermon1, data.sermon2].forEach((sermon, idx) => {
         if (!sermon) return;
-        const label = '证道 第' + (idx === 0 ? '一' : '二') + '讲';
+        const label = '第' + (idx === 0 ? '一' : '二') + '讲';
         const lines = sermon.split('\n').filter(l => l.trim());
         const firstLine = lines[0] || '';
         const verseLines = lines.length > 1 ? lines.slice(1) : [];
@@ -2120,11 +2148,12 @@ function buildSlides(data) {
     // 自定义页面（证道之后）
     insertCP('证道');
 
-    // 10. 欢迎赞美 24 (FIXED - 赞美耶稣诗集)
-    slides.push({ type: 'hymn', label: '欢迎赞美', text: FIXED.welcome + ' ' + FIXED.welcomeName, section: '欢迎赞美' });
-    tocSections.push({ name: '欢迎赞美（24）', slideIndex: slides.length - 1 });
-    for (const lyricPage of FIXED.welcomeLyrics) {
-        slides.push({ type: 'lyrics', label: FIXED.welcomeName, text: lyricPage, audioKey: 'praise-welcome' });
+    // 10. 欢迎赞美（24 / 128 二选一，FIXED）
+    const wSong = FIXED.welcomeSongs[welcomeChoice] || FIXED.welcomeSongs['24'];
+    slides.push({ type: 'hymn', label: '欢迎赞美', text: welcomeChoice + ' ' + wSong.name, section: '欢迎赞美' });
+    tocSections.push({ name: '欢迎赞美（' + welcomeChoice + '）', slideIndex: slides.length - 1 });
+    for (const lyricPage of wSong.lyrics) {
+        slides.push({ type: 'lyrics', label: wSong.name, text: lyricPage, audioKey: 'praise-welcome' });
     }
 
     // 11. 请起立 134 (FIXED - 赞美耶稣诗集)
@@ -2160,7 +2189,7 @@ let currentSlide = 0;
 
 async function buildSlideshow() {
     // Auto-load audio for fixed songs (24 and 134) by their exact API IDs
-    await loadFixedSongAudioById('praise-welcome', '5b00f970605d87b30340f3b2487b0387', '你原来是宝贵的');
+    await loadFixedSongAudioById('praise-welcome', FIXED.welcomeSongs[welcomeChoice].id, FIXED.welcomeSongs[welcomeChoice].name);
     await loadFixedSongAudioById('praise-final', '5b00f970605d87b30340f5467f65e853', '主啊，在我人生中');
 
     const data = collectSlideData();
@@ -2272,7 +2301,7 @@ function renderSlide() {
             html = `<div class="s-body" style="margin-top:0;font-size:calc(clamp(27px,5.5vw,80px) * var(--fs-scale));">${esc(s.text)}</div>`;
             break;
         case 'sermon':
-            html = `<div class="s-title">证道</div><div class="s-subtitle">${esc(s.ref)}</div><div class="s-body">${esc(s.text)}</div>`;
+            html = `<div class="s-title">${esc(s.ref)}</div><div class="s-body">${esc(s.text)}</div>`;
             break;
         case 'sermon-verse':
             html = `<div class="s-subtitle" style="margin-top:0;">${esc(s.label)}</div><div class="s-body" style="margin-top:8px;font-size:calc(clamp(27px,5.5vw,80px) * var(--fs-scale));">${esc(s.text)}</div>`;
@@ -2439,29 +2468,21 @@ let tocVisible = true;
 // 章节名 → 简称映射（1-2字）
 function getSectionAbbr(name) {
     const map = {
-        '开篇': '开', '题目': '题',
-        '献上赞美': '赞', '赞美': '赞',
-        '请起立': '立',
-        '经文诵读': '经', '诗篇': '诗',
-        '新编赞美': '编', '请坐下': '坐',
-        '特颂': '特',
-        '证道': '证', '讲道': '讲',
-        '信仰告白': '信',
-        '欢迎赞美': '迎', '欢迎': '迎',
-        '结束赞美': '终', '结束': '终',
-        '祝福祷告': '祷', '祷告': '祷',
-        '论坛分享': '论', '论坛要点': '论',
-        '自定义': '自',
-        '以马内利': '结'
+        '开篇': '开篇',
+        '赞美1': '赞美1', '赞美2': '赞美2',
+        '献上赞美': '赞美',
+        '新编赞美1': '新编1', '新编赞美2': '新编2',
+        '信仰告白': '信仰告白', '特颂': '特颂',
+        '欢迎赞美': '欢迎赞美', '结束赞美': '结束赞美',
+        '祝福祷告': '祝福祷告', '论坛分享': '论坛',
+        '以马内利': '以马内利',
     };
-    // 精确匹配
-    if (map[name]) return map[name];
-    // 模糊匹配 "诗篇 23篇" → "诗"
-    for (const [key, abbr] of Object.entries(map)) {
-        if (name.indexOf(key) === 0) return abbr;
-    }
-    // 取首字
-    return name.charAt(0);
+    // 诗篇 XX篇 → 诗篇XX篇
+    const psalmM = name.match(/^诗篇 (.+)篇$/);
+    if (psalmM) return '诗篇' + psalmM[1] + '篇';
+    // 第一讲/第二讲 → 原样
+    if (name === '第一讲' || name === '第二讲') return name;
+    return map[name] || name;
 }
 
 function buildToc() {
@@ -3257,6 +3278,15 @@ window.addEventListener('DOMContentLoaded', () => {
     // 歌曲编号自动补全 + 后台预热歌曲索引
     setupSongAutoFill();
     setTimeout(() => { getSongList().catch(() => {}); }, 1000);
+    // 恢复欢迎赞美选择
+    try {
+        const wc = localStorage.getItem('wpg_welcome_choice');
+        if (wc === '24' || wc === '128') {
+            welcomeChoice = wc;
+            const radio = document.querySelector('input[name="welcome-choice"][value="' + wc + '"]');
+            if (radio) radio.checked = true;
+        }
+    } catch (e) {}
     // 初始化自动解析开关状态
     try {
         const ap = localStorage.getItem('wpg_auto_parse');
@@ -3525,7 +3555,7 @@ async function generatePPT() {
                     slide.addText(s.text, { x: 1.5, y: 0.8, w: 10.333, h: 6, fontSize: 24, color: W, align: 'center', valign: 'middle', fontFace: 'Microsoft YaHei', lineSpacing: 38 });
                     break;
                 case 'sermon':
-                    secTitle(slide, '证道');
+                    secTitle(slide, '');
                     slide.addText(s.ref, { x: 1, y: 2.0, w: 11.333, h: 0.8, fontSize: 22, color: G, align: 'center', fontFace: 'Microsoft YaHei' });
                     slide.addText(s.text, { x: 1, y: 3.0, w: 11.333, h: 3, fontSize: 28, color: W, align: 'center', fontFace: 'Microsoft YaHei', lineSpacing: 44 });
                     break;
@@ -3651,7 +3681,7 @@ const CP_POSITIONS = [
     { id: '赞美', label: '赞美之后' },
     { id: '经文', label: '经文之后' },
     { id: '信仰告白', label: '信仰告白之后' },
-    { id: '证道', label: '证道之后' },
+    { id: '证道', label: '讲道之后' },
     { id: '论坛', label: '论坛之后（默认）' },
     { id: '末尾', label: '末尾（以马内利前）' },
 ];
@@ -4307,7 +4337,7 @@ async function handlePhotoUpload(input) {
         const base64 = await new Promise((res, rej) => {
             const r = new FileReader(); r.onload = () => res(r.result.split(',')[1]); r.onerror = () => rej(new Error('读取失败')); r.readAsDataURL(file);
         });
-        const prompt = '识别教会礼拜节目单图片，提取: lastweek(上周), date(日期如2026.4.12), declaration(777宣告), praise1(赞美1如"76人生理由"), praise2(赞美2), special(特颂), psalm(诗篇编号), hymn1(新编赞美1), hymn2(新编赞美2), sermon1(证道1经文+标题), sermon2(证道2), forum(论坛)。只返回JSON: {"lastweek":"","date":"","declaration":"","praise1":"","praise2":"","special":"","psalm":"","hymn1":"","hymn2":"","sermon1":"","sermon2":"","forum":""}';
+        const prompt = '识别教会礼拜节目单图片，提取: lastweek(上周), date(日期如2026.4.12), declaration(777宣告), praise1(赞美1如"76人生理由"), praise2(赞美2), special(特颂), psalm(诗篇编号), hymn1(新编赞美1), hymn2(新编赞美2), sermon1(第一讲经文+标题), sermon2(第二讲), forum(论坛)。只返回JSON: {"lastweek":"","date":"","declaration":"","praise1":"","praise2":"","special":"","psalm":"","hymn1":"","hymn2":"","sermon1":"","sermon2":"","forum":""}';
         const resp = await fetch(QWEN_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+QWEN_KEY}, body:JSON.stringify({model:'qwen-vl-max',messages:[{role:'system',content:'只返回JSON'},{role:'user',content:[{type:'image_url',image_url:{url:'data:image/jpeg;base64,'+base64}},{type:'text',text:prompt}]}],temperature:0.1,max_tokens:2000}) });
         if (!resp.ok) throw new Error('API '+resp.status);
         const data = await resp.json(), content = data.choices?.[0]?.message?.content;
@@ -4395,7 +4425,7 @@ function hideSongBtns(type) {
     // 这里确保 IndexedDB 提前初始化，减少后续播放时的初始化等待
     openAudioDB().catch(() => {});
     // 预先设置固定歌曲为本地文件，避免任何网络请求
-    loadFixedSongAudioById('praise-welcome', '5b00f970605d87b30340f3b2487b0387', '你原来是宝贵的');
+    loadFixedSongAudioById('praise-welcome', FIXED.welcomeSongs[welcomeChoice].id, FIXED.welcomeSongs[welcomeChoice].name);
     loadFixedSongAudioById('praise-final', '5b00f970605d87b30340f5467f65e853', '主啊，在我人生中');
 })();
 
