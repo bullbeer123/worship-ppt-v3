@@ -161,6 +161,25 @@ html.elder-mode .hist-title{font-size:14px}
 html.elder-mode .side-btn{font-size:14px;padding:12px}
 @media(min-width:768px){html.elder-mode .app{max-width:720px}}
 @media(min-width:1024px){html.elder-mode .app{max-width:800px}}
+/* LRC 歌词跟随（覆盖在幻灯片上的当前句，大字体便于观众跟唱） */
+.lrc-line { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: 88%; text-align: center; font-size: calc(clamp(32px, 6vw, 96px) * var(--fs-scale, 1)); color: #fff; font-weight: 700; line-height: 1.5; text-shadow: 0 2px 16px rgba(0,0,0,0.7); z-index: 15; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+.lrc-line.show { opacity: 1; }
+.lrc-fade { animation: lrcFade 0.3s ease; }
+@keyframes lrcFade { from { opacity: 0.3; } to { opacity: 1; } }
+/* 歌谱视图 */
+.gepu-view { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92vw, 1200px); height: 88dvh; background: #fff; border-radius: 8px; z-index: 320; overflow: hidden; box-shadow: 0 8px 48px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+.gepu-view img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.gepu-close { position: absolute; top: 12px; right: 16px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 20px; padding: 6px 16px; font-size: 14px; cursor: pointer; }
+/* 投屏模式：全屏时控制栏 idle 自动隐藏 */
+.slide-overlay.show.auto-hide .slide-controls, .slide-overlay.show.auto-hide .slide-audio-bar, .slide-overlay.show.auto-hide .slide-toc-panel { opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+.slide-overlay.show .slide-controls, .slide-overlay.show .slide-audio-bar, .slide-overlay.show .slide-toc-panel { opacity: 1; transition: opacity 0.4s; }
+.slide-toc-panel { transition: transform 0.25s ease, opacity 0.4s; }
+
+.slide-audio-bar { display: none;
+/* 投屏模式：全屏时控制栏 idle 自动隐藏 */
+.slide-overlay.show.auto-hide .slide-controls, .slide-overlay.show.auto-hide .slide-audio-bar, .slide-overlay.show.auto-hide .slide-toc-panel { opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+.slide-overlay.show .slide-controls, .slide-overlay.show .slide-audio-bar, .slide-overlay.show .slide-toc-panel { opacity: 1; transition: opacity 0.4s; }
+.slide-toc-panel { transition: transform 0.25s ease, opacity 0.4s; }
 </style>
 </head>
 <body>
@@ -253,7 +272,7 @@ html.elder-mode .side-btn{font-size:14px;padding:12px}
 
 <!-- Slideshow overlay -->
 <div class="slide-overlay" id="slideshow-overlay">
-    <div class="slide-stage"><div class="slide-page" id="slide-page"></div></div>
+    <div class="slide-stage"><div class="slide-page" id="slide-page"></div><div class="lrc-line" id="lrc-line"></div><div class="gepu-view" id="gepu-view" style="display:none"><img id="gepu-img" alt="歌谱"><div class="gepu-close" onclick="toggleGepuView(false)">✕ 关闭歌谱</div></div></div>
     <div class="slide-audio-bar" id="slide-audio-bar">
         <div class="audio-name" id="audio-name"></div>
         <input type="range" class="audio-progress" id="audio-progress" min="0" max="100" value="0">
@@ -263,6 +282,7 @@ html.elder-mode .side-btn{font-size:14px;padding:12px}
     </div>
     <div class="slide-controls">
         <button class="slide-ctrl-btn" onclick="toggleToc()">目录</button>
+        <button class="slide-ctrl-btn" id="btn-gepu" onclick="toggleGepuView(true)" style="display:none">🎼 歌谱</button>
         <button class="slide-ctrl-btn" onclick="prevSlide()">上一页</button>
         <span class="slide-counter" id="slide-counter">1/1</span>
         <button class="slide-ctrl-btn" onclick="nextSlide()">下一页</button>
@@ -314,6 +334,28 @@ html.elder-mode .side-btn{font-size:14px;padding:12px}
 // ============ Audio Management ============
 const audioFiles = {};  // { praise1: { url, name }, praise2: ..., hymn1: ..., hymn2: ... }
 let currentAudio = null; // { key, audioElement }
+// LRC 歌词跟随：songMeta[type] = { lrc, gepuUrl, title }，lrcData[key] = [{t, text}]
+let songMeta = {};
+let lrcData = {};
+let lrcActiveKey = null;
+// 解析 LRC 时间戳歌词 → [{t: 秒, text: 歌词行}]
+function parseLrc(lrc) {
+    if (!lrc) return [];
+    const out = [];
+    const lines = String(lrc).split('\n');
+    for (const line of lines) {
+        const timeTags = line.match(/\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]/g);
+        if (!timeTags) continue;
+        const text = line.replace(/\[\d{1,2}:\d{2}(?:\.\d{1,3})?\]/g, '').trim();
+        for (const tag of timeTags) {
+            const m = tag.match(/\[(\d{1,2}):(\d{2})(?:\.(\d{1,3}))?\]/);
+            const t = parseInt(m[1]) * 60 + parseInt(m[2]) + parseFloat('0.' + (m[3] || '0'));
+            out.push({ t: t, text: text });
+        }
+    }
+    out.sort((a, b) => a.t - b.t);
+    return out;
+}
 // 强制将URL升级为https（解决HTTPS页面加载HTTP资源的mixed content问题）
 function ensureHttps(url) {
     if (!url) return url;
@@ -576,10 +618,17 @@ async function downloadAllAudio() {
         const info = audioFiles[type];
         if (!info || !info.url || info.isLocalFile || info.url.startsWith('blob:')) continue;
         count++;
-        setTimeout(() => window.open(info.url, '_blank'), count * 500);
+        setTimeout(() => {
+            const a = document.createElement('a');
+            a.href = info.url;
+            a.download = (document.getElementById('f-'+type).value.trim().replace(/^\d+[\s.、,，]*/,'')||'song') + '.mp3';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }, count * 800);
     }
-    if (count === 0) showToast('📎 没有需要下载的远程音频');
-    else showToast('⬇ 正在打开 ' + count + ' 个下载窗口，请逐个右键保存');
+    if (count === 0) showToast('没有需要下载的远程音频');
+    else showToast('正在下载 ' + count + ' 首音频...');
 }
 
 // ============ Verification Dashboard ============
@@ -711,27 +760,18 @@ async function confirmVerify() {
 
 async function downloadAudio(type) {
     const info = audioFiles[type];
-    if (!info || !info.url) { showToast('⚠️ 请先搜索歌词获取音频链接', true); return; }
-    // 本地 blob 文件不需要下载
-    if (info.url.startsWith('blob:')) { showToast('📎 已是本地文件'); return; }
+    if (!info || !info.url) { showToast('请先搜索歌词获取音频链接', true); return; }
+    if (info.url.startsWith('blob:')) { showToast('已是本地文件'); return; }
     const songName = document.getElementById('f-' + type).value.trim().replace(/^\d+[\s.、,，]*/, '') || 'song';
     const filename = songName + '.mp3';
-    try {
-        showToast('⬇ 正在下载 ' + filename + '...');
-        const resp = await fetch(info.url);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const blob = await resp.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(a.href);
-        showToast('✅ 已下载：' + filename);
-    } catch (e) {
-        // 直接下载可能被CORS阻止，尝试window.open作为fallback
-        window.open(info.url, '_blank');
-        showToast('⚠️ 直接下载失败，已在新窗口打开，请右键另存为');
-    }
+    // 直接使用原始URL触发下载（不fetch，避免CORS失败）
+    const a = document.createElement('a');
+    a.href = info.url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('下载中：' + filename);
 }
 
 function onAudioSelected(key, input) {
@@ -1580,6 +1620,18 @@ function lookupSongUrlFromDict(query) {
 
 async function getSongList() {
     if (songCache) return songCache;
+    // ★ 优先用 localStorage 持久化索引（1190首，一次拉取永久可用）
+    const INDEX_KEY = 'wpg_song_index_v1';
+    try {
+        const cached = localStorage.getItem(INDEX_KEY);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 500) {
+                songCache = parsed;
+                return songCache;
+            }
+        }
+    } catch (e) {}
     const resp = await fetch(SONG_API + '/start/zanmei/sgbList');
     const json = await resp.json();
     if (json.code === 200 && json.rows) {
@@ -1587,7 +1639,52 @@ async function getSongList() {
     } else if (json.code === 200 && json.data) {
         songCache = json.data;
     }
+    // 持久化到 localStorage（压缩字段减少体积）
+    if (songCache && songCache.length > 0) {
+        try {
+            const slim = songCache.map(s => ({ id: s.id || s._id, shiji_index: s.shiji_index, xuhao: s.xuhao, title: s.title }));
+            localStorage.setItem(INDEX_KEY, JSON.stringify(slim));
+        } catch (e) {}
+    }
     return songCache || [];
+}
+
+// 按编号查询歌名（配合输入框自动补全）
+async function getSongNameByNumber(num, shijiFilter) {
+    try {
+        const list = await getSongList();
+        if (!list || list.length === 0) return '';
+        const n = String(num);
+        let candidates = list.filter(s => String(s.xuhao) === n);
+        if (shijiFilter !== null && shijiFilter !== undefined) {
+            const inShiji = candidates.filter(s => s.shiji_index === shijiFilter);
+            if (inShiji.length > 0) candidates = inShiji;
+        }
+        if (candidates.length === 0) return '';
+        return candidates[0].title || '';
+    } catch (e) { return ''; }
+}
+
+// 赞美/新编输入框：输入纯数字后自动补全歌名（"137" → "137 感谢的理由"）
+let _songAutoFillTimer = null;
+let _songAutoFillShiji = { praise1: 0, praise2: 0, special: null, hymn1: 2, hymn2: 2 };
+function setupSongAutoFill() {
+    ['praise1', 'praise2', 'special', 'hymn1', 'hymn2'].forEach(type => {
+        const el = document.getElementById('f-' + type);
+        if (!el) return;
+        el.addEventListener('input', () => {
+            clearTimeout(_songAutoFillTimer);
+            const raw = el.value.trim();
+            const numMatch = raw.match(/^\d{1,3}$/);
+            if (!numMatch) return;
+            _songAutoFillTimer = setTimeout(async () => {
+                const name = await getSongNameByNumber(numMatch[0], _songAutoFillShiji[type]);
+                if (name && el.value.trim() === numMatch[0]) {
+                    el.value = numMatch[0] + ' ' + name;
+                }
+            }, 600);
+        });
+    });
 }
 
 async function fetchLyrics(type) {
@@ -1677,6 +1774,12 @@ async function fetchLyrics(type) {
             const d = detailJson.data[0];
             lyric = d.lyric || '';
             audioUrl = d.adUrl || '';
+            // 保存 LRC 时间戳歌词与歌谱URL（供幻灯片歌词跟随与歌谱展示）
+            songMeta[type] = {
+                lrc: d.lrc || '',
+                gepuUrl: d.gepuUrl || '',
+                title: song.title || ''
+            };
         }
 
         if (!lyric) {
@@ -1995,10 +2098,10 @@ function buildSlides(data) {
         }
     }
 
-    // 9. Sermon — each sermon: title + verses split into pages (up to 2 sentences)
+    // 9. 牧师证道 — each sermon: title + verses split into pages (up to 2 sentences)
     [data.sermon1, data.sermon2].forEach((sermon, idx) => {
         if (!sermon) return;
-        const label = '第' + (idx === 0 ? '一' : '二') + '讲';
+        const label = '证道 第' + (idx === 0 ? '一' : '二') + '讲';
         const lines = sermon.split('\n').filter(l => l.trim());
         const firstLine = lines[0] || '';
         const verseLines = lines.length > 1 ? lines.slice(1) : [];
@@ -2169,7 +2272,7 @@ function renderSlide() {
             html = `<div class="s-body" style="margin-top:0;font-size:calc(clamp(27px,5.5vw,80px) * var(--fs-scale));">${esc(s.text)}</div>`;
             break;
         case 'sermon':
-            html = `<div class="s-title" style="display:none"></div><div class="s-subtitle">${esc(s.ref)}</div><div class="s-body">${esc(s.text)}</div>`;
+            html = `<div class="s-title">证道</div><div class="s-subtitle">${esc(s.ref)}</div><div class="s-body">${esc(s.text)}</div>`;
             break;
         case 'sermon-verse':
             html = `<div class="s-subtitle" style="margin-top:0;">${esc(s.label)}</div><div class="s-body" style="margin-top:8px;font-size:calc(clamp(27px,5.5vw,80px) * var(--fs-scale));">${esc(s.text)}</div>`;
@@ -2262,12 +2365,73 @@ function renderSlide() {
     page.innerHTML = html;
     document.getElementById('slide-counter').textContent = `${currentSlide + 1} / ${slides.length}`;
 
+    // LRC 歌词跟随：进入歌词页时激活对应歌曲的 LRC 数据
+    const lrcLine = document.getElementById('lrc-line');
+    if (lrcLine) {
+        const isLyricSlide = (s.type === 'lyrics');
+        if (isLyricSlide && s.audioKey && songMeta[s.audioKey] && songMeta[s.audioKey].lrc) {
+            lrcData[s.audioKey] = parseLrc(songMeta[s.audioKey].lrc);
+            lrcActiveKey = s.audioKey;
+            lrcLine.classList.add('show');
+            lrcLine.textContent = '';
+        } else {
+            lrcActiveKey = null;
+            lrcLine.classList.remove('show');
+        }
+    }
+
+    // 歌谱按钮状态
+    const gepuBtn = document.getElementById('btn-gepu');
+    if (gepuBtn) {
+        const hasGepu = s.audioKey && songMeta[s.audioKey] && songMeta[s.audioKey].gepuUrl;
+        gepuBtn.style.display = hasGepu ? 'inline-block' : 'none';
+        if (!hasGepu) document.getElementById('gepu-view').style.display = 'none';
+    }
+
     // Audio control: show/hide audio bar based on current slide
     updateAudioForSlide();
 
     // Update TOC highlight
     updateTocHighlight();
 }
+
+// ============ LRC / 歌谱 / 投屏 ============
+let lrcHideGepu = false;
+function toggleGepuView(show) {
+    const view = document.getElementById('gepu-view');
+    const s = slides[currentSlide];
+    const meta = s && s.audioKey ? songMeta[s.audioKey] : null;
+    if (show) {
+        if (!meta || !meta.gepuUrl) return;
+        document.getElementById('gepu-img').src = ensureHttps(meta.gepuUrl);
+        view.style.display = 'flex';
+        lrcHideGepu = true;
+        // 歌谱打开时隐藏 LRC 行
+        const lrcLine = document.getElementById('lrc-line');
+        if (lrcLine) lrcLine.classList.remove('show');
+    } else {
+        view.style.display = 'none';
+        lrcHideGepu = false;
+        const s2 = slides[currentSlide];
+        if (s2 && s2.audioKey && songMeta[s2.audioKey] && songMeta[s2.audioKey].lrc) {
+            document.getElementById('lrc-line').classList.add('show');
+        }
+    }
+}
+// 投屏 idle 自动隐藏控制栏
+let _idleTimer = null;
+function resetIdleTimer() {
+    const ov = document.getElementById('slideshow-overlay');
+    if (!ov || !ov.classList.contains('show')) return;
+    ov.classList.remove('auto-hide');
+    clearTimeout(_idleTimer);
+    _idleTimer = setTimeout(() => {
+        if (document.fullscreenElement) ov.classList.add('auto-hide');
+    }, 4000);
+}
+document.addEventListener('mousemove', resetIdleTimer);
+document.addEventListener('keydown', resetIdleTimer);
+document.addEventListener('click', resetIdleTimer);
 
 // ============ TOC (Table of Contents) Navigation ============
 let tocVisible = true;
@@ -2721,6 +2885,20 @@ async function updateAudioForSlide() {
                     document.getElementById('audio-time').textContent = formatTime(cur) + ' / ' + formatTime(dur);
                     const prog = document.getElementById('audio-progress');
                     if (prog && dur > 0 && !prog._seeking) prog.value = (cur / dur) * 100;
+                    // LRC 歌词跟随：按时间戳更新当前歌词行
+                    if (lrcData[s.audioKey] && lrcData[s.audioKey].length > 0 && !lrcHideGepu) {
+                        let lineText = '';
+                        const arr = lrcData[s.audioKey];
+                        for (let i = arr.length - 1; i >= 0; i--) {
+                            if (cur >= arr[i].t) { lineText = arr[i].text; break; }
+                        }
+                        const lrcEl = document.getElementById('lrc-line');
+                        if (lrcEl && lrcEl.textContent !== lineText) {
+                            lrcEl.textContent = lineText;
+                            lrcEl.classList.add('lrc-fade');
+                            setTimeout(() => lrcEl.classList.remove('lrc-fade'), 300);
+                        }
+                    }
                 });
                 audio.addEventListener('ended', () => {
                     document.getElementById('audio-btn-play').textContent = '▶ 播放';
@@ -3076,6 +3254,9 @@ function showAlertDialog(title, message) {
 window.addEventListener('DOMContentLoaded', () => {
     checkRestoreBar();
     renderHistory();
+    // 歌曲编号自动补全 + 后台预热歌曲索引
+    setupSongAutoFill();
+    setTimeout(() => { getSongList().catch(() => {}); }, 1000);
     // 初始化自动解析开关状态
     try {
         const ap = localStorage.getItem('wpg_auto_parse');
@@ -3327,6 +3508,7 @@ async function generatePPT() {
                 case 'hymn':
                     secTitle(slide, s.label);
                     slide.addText(s.text, { x: 1, y: 2.5, w: 11.333, h: 2, fontSize: 36, color: W, align: 'center', bold: true, fontFace: 'Microsoft YaHei' });
+                    // 嵌入赞美音频到PPT（用原始URL，pptxgenjs内部fetch）
                     if (s.audioKey && audioFiles[s.audioKey] && audioFiles[s.audioKey].url && !audioFiles[s.audioKey].url.startsWith('blob:')) {
                         try { slide.addMedia({ type: 'audio', path: audioFiles[s.audioKey].url }); } catch(e) {}
                     }
@@ -3343,7 +3525,7 @@ async function generatePPT() {
                     slide.addText(s.text, { x: 1.5, y: 0.8, w: 10.333, h: 6, fontSize: 24, color: W, align: 'center', valign: 'middle', fontFace: 'Microsoft YaHei', lineSpacing: 38 });
                     break;
                 case 'sermon':
-                    secTitle(slide, '');
+                    secTitle(slide, '证道');
                     slide.addText(s.ref, { x: 1, y: 2.0, w: 11.333, h: 0.8, fontSize: 22, color: G, align: 'center', fontFace: 'Microsoft YaHei' });
                     slide.addText(s.text, { x: 1, y: 3.0, w: 11.333, h: 3, fontSize: 28, color: W, align: 'center', fontFace: 'Microsoft YaHei', lineSpacing: 44 });
                     break;
@@ -4273,8 +4455,6 @@ if ('serviceWorker' in navigator) {
         .then(reg => console.log('🔧 SW已注册，OSS音频自动修复'))
         .catch(e => console.warn('SW注册失败:', e.message));
 }
-
-function toggleElderMode(){var h=document.documentElement;var on=h.classList.toggle("elder-mode");var l=document.getElementById("eldermode-link");if(l)l.textContent=on?"老年版":"标准版";try{localStorage.setItem("wpg_elder_mode",on?"1":"0")}catch(e){}}
 </script>
 
 </body>
