@@ -717,14 +717,8 @@ function showVerify() {
         </div>`);
     }
 
-    // Prayer
-    const prayer = document.getElementById('f-declaration').value.trim();
-    if (prayer) {
-        items.push(`<div class="verify-item">
-            <div class="verify-item-header"><span class="verify-icon">🙏</span><span class="verify-label">祷告</span></div>
-            <div class="verify-value">${esc(prayer.substring(0, 80)) + (prayer.length > 80 ? '…' : '')}</div>
-        </div>`);
-    }
+    // Prayer 已合并进论坛字段，此处不再单独显示（避免视觉重复）
+    // const prayer = document.getElementById('f-declaration').value.trim();
 
     // Date
     const date = document.getElementById('f-date').value.trim();
